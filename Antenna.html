@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RF Antenna Theory, Engineering & Environmental Propagation Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #040710;
+      --bg-1: #09101f;
+      --bg-2: #0f192f;
+      --bg-3: #172544;
+      --border: #22355c;
+      --border-hi: #38bdf8;
+      --text-0: #f8fafc;
+      --text-1: #cbd5e1;
+      --text-2: #94a3b8;
+      --accent: #38bdf8;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --purple: #c084fc;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-0);
+      color: var(--text-0);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      overflow-x: hidden;
+      padding-bottom: 4rem;
+    }
+
+    header {
+      background: rgba(6, 11, 23, 0.94);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+    }
+
+    .header-top {
+      max-width: 1680px;
+      margin: 0 auto;
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: radial-gradient(circle at 30% 30%, #10b981, #0369a1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+      flex-shrink: 0;
+    }
+
+    .cascade-bar {
+      background: linear-gradient(90deg, #071122 0%, #0e1e3a 50%, #071122 100%);
+      border-top: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 0.45rem 1.5rem;
+      font-size: 0.74rem;
+      font-family: var(--font-mono);
+    }
+
+    .cascade-inner {
+      max-width: 1680px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--text-1);
+    }
+
+    .cascade-step {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .cascade-step:hover { border-color: var(--accent); }
+    .cascade-step strong { color: var(--accent); }
+    .cascade-arrow { color: var(--amber); font-weight: 700; }
+
+    .container-main {
+      max-width: 1680px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    .panel {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.2rem;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .section-title h2 {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-title .sub {
+      font-size: 0.76rem;
+      color: var(--text-2);
+    }
+
+    /* Antenna Type Selector Strip */
+    .antenna-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .ant-tile {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.35rem;
+      user-select: none;
+    }
+
+    .ant-tile:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .ant-tile.active {
+      border: 2px solid var(--emerald);
+      background: rgba(16, 185, 129, 0.12);
+      box-shadow: 0 0 22px rgba(16, 185, 129, 0.25);
+    }
+
+    .ant-tile .ant-cat {
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      color: var(--amber);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .ant-tile .ant-name {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--text-0);
+      line-height: 1.25;
+    }
+
+    .ant-tile .ant-bands {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      color: var(--accent);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 0.12rem 0.4rem;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
+    /* Simulator Workspace Layout */
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1.35fr 0.95fr;
+      gap: 1.15rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1380px) {
+      .sim-grid { grid-template-columns: 1fr 1fr; }
+      .sim-col-telemetry { grid-column: span 2; }
+    }
+
+    @media (max-width: 920px) {
+      .sim-grid { grid-template-columns: 1fr; }
+      .sim-col-telemetry { grid-column: span 1; }
+    }
+
+    .control-group {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.8rem 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .control-group-title {
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--amber);
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .slider-row {
+      margin-bottom: 0.6rem;
+    }
+
+    .slider-row:last-child { margin-bottom: 0; }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-1);
+      margin-bottom: 0.2rem;
+    }
+
+    .slider-label strong {
+      font-family: var(--font-mono);
+      color: var(--accent);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #38bdf8;
+      cursor: pointer;
+    }
+
+    select.sim-select, input.sim-input {
+      width: 100%;
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      color: var(--text-0);
+      padding: 0.42rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-family: var(--font-mono);
+    }
+
+    .preset-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.45rem;
+    }
+
+    .preset-pill {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      padding: 0.16rem 0.45rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .preset-pill:hover {
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Polar Canvases */
+    .polar-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+      margin-bottom: 0.9rem;
+    }
+
+    @media (max-width: 680px) {
+      .polar-grid { grid-template-columns: 1fr; }
+    }
+
+    .canvas-card {
+      background: #040812;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.65rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .canvas-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--text-1);
+      margin-bottom: 0.4rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid rgba(34, 53, 92, 0.6);
+    }
+
+    canvas.polar-canvas {
+      width: 100%;
+      max-width: 310px;
+      aspect-ratio: 1 / 1;
+      display: block;
+    }
+
+    /* CAD Blueprint Box */
+    .blueprint-box {
+      background: radial-gradient(circle at center, #08152b 0%, #040915 100%);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem;
+    }
+
+    /* Telemetry KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .kpi-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.55rem 0.65rem;
+    }
+
+    .kpi-card .k-lbl {
+      font-size: 0.64rem;
+      text-transform: uppercase;
+      color: var(--text-2);
+      letter-spacing: 0.04em;
+    }
+
+    .kpi-card .k-val {
+      font-size: 0.92rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      margin-top: 0.1rem;
+    }
+
+    .kpi-card .k-sub {
+      font-size: 0.64rem;
+      color: var(--text-2);
+      font-family: var(--font-mono);
+    }
+
+    .loss-bar-row {
+      margin-bottom: 0.45rem;
+    }
+
+    .loss-bar-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      margin-bottom: 0.15rem;
+    }
+
+    .loss-bar-track {
+      width: 100%;
+      height: 7px;
+      background: #060b16;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .loss-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.2s ease;
+    }
+
+    /* Matrix Table */
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.76rem;
+    }
+
+    .matrix-table th, .matrix-table td {
+      padding: 0.55rem 0.65rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .matrix-table th {
+      background: var(--bg-2);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      position: sticky;
+      top: 0;
+    }
+
+    .matrix-table tr {
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .matrix-table tr:hover {
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .matrix-table tr.active-row {
+      background: rgba(16, 185, 129, 0.15);
+      border-left: 3px solid var(--emerald);
+    }
+
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: var(--bg-0); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <!-- STICKY HEADER & REAL-TIME CASCADE TRACKER -->
+  <header>
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-icon">λ/2</div>
+        <div>
+          <h1 class="text-lg font-extrabold tracking-tight">RF Antenna Theory, Engineering &amp; Environmental Propagation Lab</h1>
+          <p class="text-xs text-slate-400">InteractiveNEC-Style Radiation Pattern Solver • ITU-R Foliage / Weather / Soil Attenuation • CAD Cut-Sheet &amp; Balun Blueprint</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 text-xs font-mono">
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">Architectures: <strong class="text-emerald-400">14</strong></span>
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">Models: <strong class="text-sky-400">ITU-R P.833 / P.838 / P.676</strong></span>
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">Ground Physics: <strong class="text-amber-400">Fresnel Reflection</strong></span>
+      </div>
+    </div>
+
+    <div class="cascade-bar">
+      <div class="cascade-inner">
+        <span class="text-emerald-400 font-bold uppercase tracking-wider mr-1">⚡ Active Antenna State:</span>
+        <span class="cascade-step" onclick="document.getElementById('sec-selector').scrollIntoView({behavior:'smooth'})">
+          1. Antenna: <strong id="syncAntName">OCF Dipole (Windom)</strong>
+        </span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-step" onclick="document.getElementById('sec-simulator').scrollIntoView({behavior:'smooth'})">
+          2. Freq &amp; Height: <strong id="syncFreqHeight" style="color:var(--amber)">14.074 MHz @ 0.50λ</strong>
+        </span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-step" onclick="document.getElementById('sec-simulator').scrollIntoView({behavior:'smooth'})">
+          3. Takeoff &amp; Gain: <strong id="syncTakeoffGain" style="color:var(--emerald)">28° Elev • 6.8 dBi</strong>
+        </span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-step" onclick="document.getElementById('sec-simulator').scrollIntoView({behavior:'smooth'})">
+          4. Env &amp; Coax Loss: <strong id="syncEnvLoss" style="color:var(--rose)">-4.2 dB</strong>
+        </span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-step" onclick="document.getElementById('sec-blueprint').scrollIntoView({behavior:'smooth'})">
+          5. Cut Length: <strong id="syncCutDim" style="color:var(--purple)">10.13 m Total</strong>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container-main">
+
+    <!-- SECTION 1: 14 ANTENNA ARCHITECTURES SELECTOR -->
+    <section class="panel" id="sec-selector">
+      <div class="section-title">
+        <h2>1. Select Antenna Architecture (Click Any Type to Load Physical Equations &amp; Default Band)</h2>
+        <span class="sub">Covers VLF/HF Wire Antennas, NVIS, Multi-Band OCF/EFHW, VHF/UHF Verticals, Directional Yagi/LPDA, Circular Satcom &amp; Microwave Dishes</span>
+      </div>
+      <div class="antenna-strip" id="antennaSelectorStrip"></div>
+    </section>
+
+    <!-- SECTION 2: INTERACTIVE RADIATION PATTERN & ENVIRONMENTAL SIMULATOR -->
+    <section class="panel" id="sec-simulator">
+      <div class="section-title">
+        <h2>2. Real-Time Radiation Pattern, Ground Reflection &amp; Environmental Attenuation Simulator</h2>
+        <span class="sub">Adjust frequency, height in λ, soil conductivity, foliage canopy, rain/ice, and feedline to see immediate effects on lobes, VSWR &amp; link margin</span>
+      </div>
+
+      <div class="sim-grid">
+
+        <!-- LEFT COLUMN: PARAMETER CONTROLS -->
+        <div class="sim-col-controls">
+
+          <!-- Frequency & Geometry -->
+          <div class="control-group">
+            <div class="control-group-title">
+              <span>A. Frequency &amp; Mounting Geometry</span>
+              <span id="bandBadgeSim" class="px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 text-[10px]">HF (20m)</span>
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Operating Frequency ($f$)</span>
+                <strong id="lblFreqVal">14.074 MHz</strong>
+              </div>
+              <input type="range" id="simFreqSlider" min="0" max="1000" value="385" />
+              <div class="preset-pills">
+                <span class="preset-pill" onclick="setSimFreqMHz(0.518)">518 kHz</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(3.58)">3.58M (80m NVIS)</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(7.074)">7.074M (40m)</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(14.074)">14.074M (20m)</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(28.4)">28.4M (10m)</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(137.1)">137.1M (NOAA)</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(146.52)">146.52M (2m)</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(433.92)">433M</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(915)">915M (LoRa)</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(1090)">1090M (ADS-B)</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(2440)">2.44G</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(5800)">5.8G</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(9410)">9.4G (Radar)</span>
+                <span class="preset-pill" onclick="setSimFreqMHz(60480)">60G (WiGig)</span>
+              </div>
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Height Above Ground ($h/\lambda$)</span>
+                <strong id="lblHeightVal">0.50 λ (10.65 m)</strong>
+              </div>
+              <input type="range" id="simHeightLambda" min="0.05" max="2.50" step="0.01" value="0.50" />
+            </div>
+
+            <div class="slider-row" id="specialParamRow">
+              <div class="slider-label">
+                <span id="lblSpecialParamTitle">OCF Feedpoint Tap / Elements / Harmonic</span>
+                <strong id="lblSpecialParamVal">33% / 67% Split (2nd Harm)</strong>
+              </div>
+              <input type="range" id="simSpecialSlider" min="1" max="12" step="1" value="2" />
+            </div>
+          </div>
+
+          <!-- Ground & Terrain -->
+          <div class="control-group">
+            <div class="control-group-title">
+              <span>B. Ground Dielectric ($\varepsilon_r$), Conductivity ($\sigma$) &amp; Path</span>
+              <span class="text-emerald-400 text-[10px]">Sommerfeld Ground</span>
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label"><span>Ground Surface Type</span></div>
+              <select id="simGroundSelect" class="sim-select">
+                <option value="seawater">Seawater (σ = 5.0 S/m, εr = 80) — Ultimate Low-Angle DX</option>
+                <option value="marsh">Wet Marsh / Rich Loam (σ = 0.03 S/m, εr = 25)</option>
+                <option value="pastoral" selected>Average Pastoral Soil (σ = 0.006 S/m, εr = 13)</option>
+                <option value="rocky">Dry Forest / Mountain Granite (σ = 0.0015 S/m, εr = 5)</option>
+                <option value="desert">Arid Sand / Urban Asphalt (σ = 0.0005 S/m, εr = 3.5)</option>
+              </select>
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Target Link Distance ($d$)</span>
+                <strong id="lblDistVal">25.0 km (15.5 mi)</strong>
+              </div>
+              <input type="range" id="simDistSlider" min="0.5" max="1500" step="0.5" value="25" />
+            </div>
+          </div>
+
+          <!-- Foliage, Weather & Atmosphere -->
+          <div class="control-group">
+            <div class="control-group-title">
+              <span>C. Foliage (ITU-R P.833), Weather (P.838) &amp; Ice</span>
+              <span class="text-amber-400 text-[10px]">Environmental Loss</span>
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Foliage / Tree Canopy Depth in Path</span>
+                <strong id="lblFoliageVal">20 m (In-Leaf)</strong>
+              </div>
+              <input type="range" id="simFoliageDepth" min="0" max="200" step="5" value="20" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <div class="slider-label"><span>Canopy State</span></div>
+                <select id="simFoliageState" class="sim-select">
+                  <option value="dry_leaf">In-Leaf (Dry Summer)</option>
+                  <option value="wet_leaf" selected>Wet Canopy (Rain-Soaked)</option>
+                  <option value="leafless">Winter Bare Branches</option>
+                </select>
+              </div>
+              <div>
+                <div class="slider-label"><span>Element Ice / Radome</span></div>
+                <select id="simIceState" class="sim-select">
+                  <option value="none" selected>Clean Bare Wire / Dry</option>
+                  <option value="rain_film">Water Droplets on Wire</option>
+                  <option value="glaze_ice">6mm Freezing Rain Glaze Ice</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Rain Rate ($R$, ITU-R P.838-3)</span>
+                <strong id="lblRainVal">5 mm/hr (Moderate Rain)</strong>
+              </div>
+              <input type="range" id="simRainRate" min="0" max="120" step="1" value="5" />
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Relative Humidity &amp; Temp (ITU-R P.676)</span>
+                <strong id="lblHumidityVal">70% RH @ 20°C</strong>
+              </div>
+              <input type="range" id="simHumidity" min="10" max="100" step="5" value="70" />
+            </div>
+          </div>
+
+          <!-- Ionosphere & Coax Feedline -->
+          <div class="control-group" style="margin-bottom: 0;">
+            <div class="control-group-title">
+              <span>D. Ionosphere ($f_oF_2$) &amp; Feedline Coax Loss</span>
+              <span class="text-purple-400 text-[10px]">System Efficiency</span>
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Solar Flux Index (SFI) / $f_oF_2$ Critical Freq</span>
+                <strong id="lblSfiVal">SFI 135 (foF2 ≈ 7.4 MHz)</strong>
+              </div>
+              <input type="range" id="simSfiSlider" min="65" max="240" step="5" value="135" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <div class="slider-label"><span>Feedline Type</span></div>
+                <select id="simCoaxSelect" class="sim-select">
+                  <option value="rg58">RG-58 (50Ω Thin Coax)</option>
+                  <option value="rg8x">RG-8X / Mini-8 (50Ω)</option>
+                  <option value="lmr400" selected>LMR-400 Ultra-Low Loss</option>
+                  <option value="heliax">1/2" Heliax LDF4-50A</option>
+                  <option value="ladder450">450Ω Window Ladder Line</option>
+                </select>
+              </div>
+              <div>
+                <div class="slider-label">
+                  <span>Coax Run Length</span>
+                  <strong id="lblCoaxLen">30 m (98 ft)</strong>
+                </div>
+                <input type="range" id="simCoaxLen" min="3" max="150" step="3" value="30" class="mt-1.5" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CENTER COLUMN: DUAL POLAR PLOTS + CAD CUT-SHEET BLUEPRINT -->
+        <div class="sim-col-visuals">
+          <div class="polar-grid">
+            <div class="canvas-card">
+              <div class="canvas-header">
+                <span class="font-bold text-sky-400">AZIMUTH (H-PLANE 360° TOP VIEW)</span>
+                <span id="azBeamwidthBadge" class="text-amber-300">-3dB BW: 78°</span>
+              </div>
+              <canvas id="azimuthCanvas" class="polar-canvas" width="340" height="340"></canvas>
+              <div class="text-[11px] font-mono text-slate-400 mt-1.5 text-center" id="azCaption">
+                0° = Forward / Broadside • Red = -3dB Half-Power Circle
+              </div>
+            </div>
+
+            <div class="canvas-card">
+              <div class="canvas-header">
+                <span class="font-bold text-emerald-400">ELEVATION (E-PLANE TAKEOFF ANGLE)</span>
+                <span id="elTakeoffBadge" class="text-emerald-300">Peak: 28°</span>
+              </div>
+              <canvas id="elevationCanvas" class="polar-canvas" width="340" height="340"></canvas>
+              <div class="text-[11px] font-mono text-slate-400 mt-1.5 text-center" id="elCaption">
+                Green = Real Ground Reflection • Purple Cone = NVIS (60°–90°)
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive CAD Blueprint & Cut-Sheet SVG -->
+          <div class="blueprint-box" id="sec-blueprint">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-2 pb-1.5 border-b border-slate-800">
+              <span class="text-xs font-mono font-bold text-sky-400 uppercase tracking-wider">
+                🔧 Live Mechanical Cut-Sheet, Balun &amp; Feedpoint Schematic
+              </span>
+              <span id="blueprintSubtitle" class="text-xs font-mono text-amber-300">
+                Velocity Factor VF = 0.95 (Bare Copper Wire)
+              </span>
+            </div>
+            <svg id="blueprintSvg" viewBox="0 0 680 235" class="w-full h-[235px] block"></svg>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: HIGH-PRECISION TELEMETRY, IMPEDANCE & LINK BUDGET -->
+        <div class="sim-col-telemetry">
+          <div class="control-group" style="margin-bottom: 0.75rem;">
+            <div class="control-group-title">
+              <span>Real-Time Antenna &amp; Feedpoint Telemetry</span>
+              <span id="vswrStatusBadge" class="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px]">MATCHED</span>
+            </div>
+
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="k-lbl">Peak Directive Gain</div>
+                <div class="k-val text-emerald-400" id="kpiGain">6.8 dBi</div>
+                <div class="k-sub" id="kpiGainDbd">4.65 dBd (incl. ground)</div>
+              </div>
+              <div class="kpi-card">
+                <div class="k-lbl">Primary Takeoff Angle</div>
+                <div class="k-val text-sky-400" id="kpiTakeoff">28° Elev</div>
+                <div class="k-sub" id="kpiModeSuitability">Optimal: Regional / DX</div>
+              </div>
+              <div class="kpi-card">
+                <div class="k-lbl">Feedpoint Z &amp; Balun</div>
+                <div class="k-val text-amber-300" id="kpiImpedance">200 Ω</div>
+                <div class="k-sub" id="kpiBalun">Requires 4:1 Current Balun</div>
+              </div>
+              <div class="kpi-card">
+                <div class="k-lbl">System VSWR (50Ω)</div>
+                <div class="k-val text-purple-300" id="kpiVswr">1.35 : 1</div>
+                <div class="k-sub" id="kpiIceDetune">No Ice Detuning</div>
+              </div>
+            </div>
+
+            <!-- Attenuation Breakdown Bars -->
+            <div class="text-xs font-mono text-slate-300 font-bold mb-2 uppercase tracking-wider">
+              Environmental &amp; Feedline Attenuation Breakdown
+            </div>
+
+            <div class="loss-bar-row">
+              <div class="loss-bar-head">
+                <span class="text-slate-300">1. Coax Matched + VSWR Mismatch Loss</span>
+                <span class="text-amber-300" id="lossCoaxTxt">-1.2 dB</span>
+              </div>
+              <div class="loss-bar-track">
+                <div class="loss-bar-fill bg-amber-400" id="lossCoaxBar" style="width: 15%;"></div>
+              </div>
+            </div>
+
+            <div class="loss-bar-row">
+              <div class="loss-bar-head">
+                <span class="text-slate-300">2. Ground Reflection / Radial Loss</span>
+                <span class="text-sky-300" id="lossGroundTxt">-1.8 dB</span>
+              </div>
+              <div class="loss-bar-track">
+                <div class="loss-bar-fill bg-sky-400" id="lossGroundBar" style="width: 20%;"></div>
+              </div>
+            </div>
+
+            <div class="loss-bar-row">
+              <div class="loss-bar-head">
+                <span class="text-slate-300">3. Foliage Canopy Loss (ITU-R P.833)</span>
+                <span class="text-emerald-300" id="lossFoliageTxt">-0.9 dB</span>
+              </div>
+              <div class="loss-bar-track">
+                <div class="loss-bar-fill bg-emerald-400" id="lossFoliageBar" style="width: 12%;"></div>
+              </div>
+            </div>
+
+            <div class="loss-bar-row">
+              <div class="loss-bar-head">
+                <span class="text-slate-300">4. Rain / Fog / O₂ &amp; H₂O Gas (P.838/676)</span>
+                <span class="text-rose-300" id="lossWeatherTxt">-0.1 dB</span>
+              </div>
+              <div class="loss-bar-track">
+                <div class="loss-bar-fill bg-rose-500" id="lossWeatherBar" style="width: 4%;"></div>
+              </div>
+            </div>
+
+            <div class="loss-bar-row">
+              <div class="loss-bar-head">
+                <span class="text-slate-300">5. Free-Space / Skywave Path Loss</span>
+                <span class="text-purple-300" id="lossFsplTxt">-83.4 dB</span>
+              </div>
+              <div class="loss-bar-track">
+                <div class="loss-bar-fill bg-purple-400" id="lossFsplBar" style="width: 55%;"></div>
+              </div>
+            </div>
+
+            <div class="mt-3 p-2.5 rounded-lg bg-slate-950 border border-slate-800 font-mono text-xs">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-slate-400">Est. RX Power (100W / +50 dBm TX):</span>
+                <strong class="text-emerald-400 text-sm" id="estRxDbm">-34.6 dBm (S9+40dB)</strong>
+              </div>
+              <div class="text-[11px] text-slate-400 leading-snug" id="nvisPropagationVerdict">
+                Ionospheric Status: Operational
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Antenna Engineering Theory Deep-Dive Card -->
+          <div class="control-group" style="margin-bottom: 0;" id="activeAntennaTheoryCard"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 3: COMPREHENSIVE ANTENNA APPLICATION & FREQUENCY MATRIX -->
+    <section class="panel" id="sec-matrix">
+      <div class="section-title">
+        <h2>3. Complete Antenna Architecture Comparison Matrix (Click Any Row to Simulate)</h2>
+        <span class="sub">Frequency Ranges, Feedpoint Impedance, Balun Requirements, Polarization, Takeoff Behaviour &amp; Field Deployment Notes</span>
+      </div>
+      <div class="overflow-x-auto max-h-[540px]">
+        <table class="matrix-table" id="antennaMatrixTable">
+          <thead>
+            <tr>
+              <th>Antenna Architecture</th>
+              <th>Optimal Freq Range</th>
+              <th>Native Gain (dBi)</th>
+              <th>Feedpoint Z &amp; Balun</th>
+              <th>Polarization</th>
+              <th>Takeoff / Lobe Shape</th>
+              <th>Primary Tactical &amp; Commercial Applications</th>
+            </tr>
+          </thead>
+          <tbody id="antennaMatrixBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    /***************************************************************************
+     * 1. COMPREHENSIVE 14-ANTENNA ENGINEERING DATABASE
+     ***************************************************************************/
+    const ANTENNA_DB = [
+      {
+        id: "dipole",
+        name: "Half-Wave Center-Fed Dipole (λ/2)",
+        shortName: "λ/2 Dipole",
+        category: "Balanced Wire",
+        freqRange: "1.8 MHz – 3 GHz",
+        defaultFreqMHz: 14.074,
+        defaultHeightLambda: 0.50,
+        defaultSpecial: 1,
+        specialLabel: "Harmonic Multiple (1 = Fundamental λ/2)",
+        specialMin: 1,
+        specialMax: 5,
+        baseGainDbi: 2.15,
+        impedanceOhms: 73,
+        balun: "1:1 Current Choke Balun (Guanella)",
+        polarization: "Horizontal (HF) / Vertical (VHF+)",
+        patternType: "Broadside Figure-8 (Azimuth)",
+        applications: "Universal HF/VHF benchmark, SWL, Amateur 80m–10m, EMC reference standard",
+        theory: "The fundamental resonant element: two quarter-wave conductors fed at the center current maximum. In free space, impedance is Z = 73 + j42.5 Ω (trimmed by ~5% Velocity Factor to 0.475λ for pure 70Ω resistance). Height above ground controls vertical takeoff angle: at 0.15λ it radiates straight up (NVIS); at 0.5λ it forms a 28° DX lobe.",
+        pros: "High efficiency (>95%), balanced radiation, simple construction, no radials needed.",
+        cons: "Single-band (plus 3rd harmonic), requires two elevated supports."
+      },
+      {
+        id: "ocf_dipole",
+        name: "Off-Center Fed (OCF / Windom) Dipole",
+        shortName: "OCF Dipole (67/33%)",
+        category: "Multi-Band Wire",
+        freqRange: "3.5 – 54 MHz (HF + 6m)",
+        defaultFreqMHz: 14.074,
+        defaultHeightLambda: 0.45,
+        defaultSpecial: 2,
+        specialLabel: "Operating Harmonic (1=80m, 2=40m, 4=20m, 8=10m)",
+        specialMin: 1,
+        specialMax: 8,
+        baseGainDbi: 3.2,
+        impedanceOhms: 200,
+        balun: "4:1 Current Balun (200Ω → 50Ω) + Common-Mode Choke",
+        polarization: "Horizontal / Skewed Multi-Lobe",
+        patternType: "Figure-8 (n=1) → Skewed Cloverleaf (n≥2)",
+        applications: "Multi-band HF base & tactical field operations (80m/40m/20m/17m/12m/10m/6m without a tuner)",
+        theory: "By moving the feedpoint off-center to a 33% / 67% split (or 20% / 80%), the feedpoint encounters a consistent ~200–270 Ω impedance across both the fundamental AND even harmonics (2f, 4f, 6f, 8f) where a center-fed dipole would present an unusable 3,000 Ω voltage node! Because leg currents are asymmetric on harmonics, the azimuth pattern skews toward the longer 67% leg.",
+        pros: "Covers 5 to 7 HF bands with low VSWR using a single wire and a 4:1 Guanella current balun.",
+        cons: "Asymmetric feed induces feedline common-mode current unless a high-impedance 1:1 choke is placed below the 4:1 balun."
+      },
+      {
+        id: "nvis",
+        name: "NVIS Horizontal Array + Ground Reflector",
+        shortName: "NVIS Tactical HF",
+        category: "Zero-Skip Regional HF",
+        freqRange: "2.0 – 10.0 MHz (160m/80m/60m/40m)",
+        defaultFreqMHz: 5.357,
+        defaultHeightLambda: 0.16,
+        defaultSpecial: 1,
+        specialLabel: "Parasitic Ground Wire (0=No, 1=0.52λ Reflector Below)",
+        specialMin: 0,
+        specialMax: 1,
+        baseGainDbi: 6.4,
+        impedanceOhms: 48,
+        balun: "1:1 Current Balun",
+        polarization: "Horizontal (High-Angle Skywave)",
+        patternType: "Zenith Umbrella Cone (65°–90° Elevation)",
+        applications: "Military tactical comms, mountain/canyon disaster relief, eliminating the 30–500 km HF skip zone",
+        theory: "Mounted deliberately low (0.10λ to 0.22λ above ground, e.g., 4–7 meters high on 40m/80m) with a 0.52λ passive reflector wire laid directly on the ground underneath. Earth acts as a planar reflector pushing 85% of RF energy straight up (70°–90° elevation). If operating frequency f < foF2 critical frequency, the ionosphere reflects the wave umbrella-style across a 400 km radius over mountains and dense jungle.",
+        pros: "Defeats steep mountain terrain and dense foliage; zero skip zone; 10–15 dB quieter noise floor than verticals.",
+        cons: "Fails completely if operating frequency exceeds the real-time foF2 critical frequency (wave pierces into space)."
+      },
+      {
+        id: "monopole",
+        name: "Quarter-Wave Ground-Plane Monopole (λ/4)",
+        shortName: "λ/4 Monopole Whip",
+        category: "Unbalanced Vertical",
+        freqRange: "30 kHz – 6 GHz",
+        defaultFreqMHz: 14.200,
+        defaultHeightLambda: 0.05,
+        defaultSpecial: 16,
+        specialLabel: "Ground Radial Count (4 to 64 Radials)",
+        specialMin: 4,
+        specialMax: 64,
+        baseGainDbi: 5.15,
+        impedanceOhms: 36.5,
+        balun: "Direct 50Ω Coax (45° drooping radials raise Z to 50Ω)",
+        polarization: "Vertical",
+        patternType: "Omnidirectional Azimuth / Low-Angle Donut",
+        applications: "AM broadcast towers, HF DX verticals, VHF/UHF vehicle whips, P25/TETRA handsets, ADS-B stubs",
+        theory: "Uses a conductive ground plane or buried/elevated radial system to create a virtual mirror-image lower half, reducing physical height to λ/4. Over perfect conductivity (seawater), impedance is 36.5 Ω with a razor-low 10°–18° takeoff angle. Over poor soil with few radials, ground resistance (Rg = 15–30 Ω) burns up to 50% of transmitter power as soil heat and tilts the lobe upward (Brewster angle effect).",
+        pros: "360° omnidirectional azimuth coverage; half the physical size of a dipole; low takeoff angle for DX.",
+        cons: "Highly dependent on radial system or vehicle roof ground plane; susceptible to vertical man-made noise."
+      },
+      {
+        id: "collinear_58",
+        name: "5/8-Wavelength (0.625λ) Vertical Whip",
+        shortName: "5/8λ Gain Vertical",
+        category: "Compressed-Lobe Vertical",
+        freqRange: "27 MHz – 1.3 GHz",
+        defaultFreqMHz: 146.52,
+        defaultHeightLambda: 1.0,
+        defaultSpecial: 8,
+        specialLabel: "Ground Radials / Counterpoise Elements",
+        specialMin: 3,
+        specialMax: 16,
+        baseGainDbi: 5.35,
+        impedanceOhms: 50,
+        balun: "Base Series Loading Coil (~0.12λ electrical) to 50Ω",
+        polarization: "Vertical",
+        patternType: "Omnidirectional Azimuth / Compressed Horizon Lobe",
+        applications: "VHF/UHF base stations, 2m/70cm mobile roofs, 10m/CB base antennas, Marine AIS",
+        theory: "Extending a vertical radiator to 0.625λ reaches the maximum horizontal gain achievable by a single vertical wire before phase reversal splits the main lobe into high-angle sky lobes (which occurs above 0.65λ). Because 0.625λ is capacitive (Z ≈ 55 - j280 Ω), a series base inductance coil adds ~0.12λ electrical length to resonate it at 0.75λ while compressing radiation toward the horizon (+3.2 dB over a λ/4 whip).",
+        pros: "+3 dB extra horizon gain over a λ/4 whip across 360° azimuth.",
+        cons: "Requires a base matching coil and proper ground radials."
+      },
+      {
+        id: "efhw",
+        name: "End-Fed Half-Wave (EFHW) + 49:1 Unun",
+        shortName: "EFHW (49:1 Unun)",
+        category: "Multi-Band Portable",
+        freqRange: "3.5 – 30 MHz (HF)",
+        defaultFreqMHz: 14.074,
+        defaultHeightLambda: 0.40,
+        defaultSpecial: 2,
+        specialLabel: "Harmonic Band (1=40m, 2=20m, 3=15m, 4=10m)",
+        specialMin: 1,
+        specialMax: 6,
+        baseGainDbi: 2.6,
+        impedanceOhms: 2450,
+        balun: "49:1 (7:1 Turns Ratio) Type-43 Toroid Autotransformer + 100pF Cap",
+        polarization: "Horizontal / Sloper",
+        patternType: "Figure-8 (n=1) → Multi-Leaf End-Fire Lobes (n≥2)",
+        applications: "SOTA/POTA backcountry HF, stealth residential wires, rapid military field deployment",
+        theory: "Feeds a half-wave wire at its extreme end—a voltage node where impedance is Z ≈ 2,450 to 4,000 Ω. A 49:1 impedance transformer (2 primary turns : 14 secondary turns on an FT240-43 ferrite core, bypassed with a 100 pF 3kV silver-mica capacitor) steps 2,450 Ω down to 50 Ω. Because every integer harmonic (2f, 3f, 4f) also places a high-impedance voltage antinode at the end, it operates across 40m/20m/15m/10m without a tuner.",
+        pros: "Single end-point feed (throw one wire end into a tree); naturally multi-band on all integer harmonics.",
+        cons: "Requires a 0.05λ counterpoise (or uses coax shield) plus a 1:1 line isolator choke 0.05λ down the coax."
+      },
+      {
+        id: "mag_loop",
+        name: "Small Transmitting Magnetic Loop (STL)",
+        shortName: "Magnetic Loop (High-Q)",
+        category: "Compact H-Field Loop",
+        freqRange: "10 kHz – 30 MHz",
+        defaultFreqMHz: 14.074,
+        defaultHeightLambda: 0.15,
+        defaultSpecial: 100,
+        specialLabel: "Loop Circumference (% of 0.25λ, e.g. 100 = 0.20λ)",
+        specialMin: 35,
+        specialMax: 100,
+        baseGainDbi: 1.5,
+        impedanceOhms: 50,
+        balun: "Faraday Coupling Loop (1/5th Main Diameter) or Gamma Match",
+        polarization: "Vertical or Horizontal Magnetic Dipole",
+        patternType: "Vertical Donut with Razor-Sharp ±30 dB Axial Nulls",
+        applications: "Urban/apartment HF, SIGINT direction finding (DF), NDB/VLF reception, stealth tactical comms",
+        theory: "A sub-wavelength copper tube loop (circumference 0.08λ to 0.25λ) resonated by a high-voltage vacuum variable capacitor. Because radiation resistance Rr is tiny (0.05 to 0.3 Ω), conductor and capacitor resistance Rloss must be kept under 0.05 Ω using thick welded copper pipe. At 100W RF, circulating current exceeds 30 Amps and capacitor voltage reaches 3,500–6,000 V RMS! Insensitive to near-field electric (E-field) RFI.",
+        pros: "Tiny footprint (~1–2m diameter on HF); deep 30 dB nulls rotate to erase local noise; works 1m off the ground.",
+        cons: "Ultra-narrow 25–60 kHz 2:1 VSWR bandwidth (must retune capacitor every QSY); lethal kV voltages on capacitor."
+      },
+      {
+        id: "jpole",
+        name: "J-Pole & Slim Jim (λ/2 + λ/4 Stub)",
+        shortName: "J-Pole / Slim Jim",
+        category: "Stub-Matched Vertical",
+        freqRange: "27 MHz – 1.3 GHz (VHF/UHF)",
+        defaultFreqMHz: 146.52,
+        defaultHeightLambda: 1.2,
+        defaultSpecial: 1,
+        specialLabel: "Variant (1 = Standard J-Pole, 2 = Folded Slim Jim)",
+        specialMin: 1,
+        specialMax: 2,
+        baseGainDbi: 3.8,
+        impedanceOhms: 50,
+        balun: "50Ω Tap along λ/4 Parallel Matching Stub + Coax RF Choke",
+        polarization: "Vertical",
+        patternType: "Omnidirectional Azimuth / Low Horizon Angle",
+        applications: "2m/70cm VHF/UHF base & roll-up emergency antennas, APRS digipeaters, Marine AIS, GMRS",
+        theory: "Combines an end-fed λ/2 vertical radiator with a λ/4 parallel transmission-line matching stub shorted at the bottom. Moving the 50 Ω coax tap ~3–5% up from the shorted bottom stub finds the exact 50 Ω impedance point. The 'Slim Jim' variant folds the top λ/2 section over to create a 2-element phased vertical array, lowering the takeoff angle toward the horizon by ~1.5 dB over a standard J-Pole.",
+        pros: "Requires no radials; bottom stub can be bolted directly to a grounded metal mast for lightning protection.",
+        cons: "Total height is 0.75λ; requires a ferrite choke at the feed tap to keep RF off the coax shield."
+      },
+      {
+        id: "yagi",
+        name: "Yagi-Uda Parasitic Beam Array",
+        shortName: "Yagi-Uda Beam",
+        category: "Directional Parasitic Array",
+        freqRange: "14 MHz – 3 GHz (HF/VHF/UHF)",
+        defaultFreqMHz: 144.20,
+        defaultHeightLambda: 1.5,
+        defaultSpecial: 5,
+        specialLabel: "Total Element Count (3 to 12 Elements)",
+        specialMin: 3,
+        specialMax: 12,
+        baseGainDbi: 10.2,
+        impedanceOhms: 28,
+        balun: "Gamma Match, Hairpin (Beta) Match, or Folded Dipole + 4:1 Balun",
+        polarization: "Horizontal (SSB/CW/DX) or Vertical (FM)",
+        patternType: "High-Gain Forward Pencil Beam + 22 dB F/B Null",
+        applications: "HF DXing, VHF/UHF weak-signal & EME Moonbounce, point-to-point links, radar arrays",
+        theory: "Consists of one driven λ/2 dipole flanked by a slightly longer (+5%) inductive Reflector behind it and 1 to 10 slightly shorter (-4% to -8%) capacitive Directors in front. Mutual electromagnetic coupling induces phase-shifted currents in the parasitic elements that cancel backward radiation (18–28 dB Front-to-Back ratio) and focus forward energy into a tight beam whose gain scales with boom length.",
+        pros: "High forward gain (7 to 16 dBi); rejects rear/side interference; multiplies both TX ERP and RX sensitivity.",
+        cons: "Narrow bandwidth (~3–6% of center frequency); physically large on HF; requires rotator for 360° coverage."
+      },
+      {
+        id: "lpda",
+        name: "Log-Periodic Dipole Array (LPDA)",
+        shortName: "Log-Periodic (LPDA)",
+        category: "Wideband Directional Array",
+        freqRange: "3 MHz – 18 GHz",
+        defaultFreqMHz: 400.0,
+        defaultHeightLambda: 1.2,
+        defaultSpecial: 8,
+        specialLabel: "Dipole Element Pairs (5 to 12 Elements)",
+        specialMin: 5,
+        specialMax: 12,
+        baseGainDbi: 7.8,
+        impedanceOhms: 50,
+        balun: "Crisscrossed 180° Phase-Reversing Twin-Boom Feeder (Fed at Nose!)",
+        polarization: "Linear (Horizontal or Vertical)",
+        patternType: "Constant-Beamwidth Unidirectional Forward Lobe",
+        applications: "SIGINT wideband direction finding, EMC compliance labs, OTH radar curtains, wideband TV/cellular",
+        theory: "Element lengths (Ln) and spacings (dn) scale geometrically by constant factor τ = Ln+1/Ln (typically 0.82–0.92). Fed at the shortest high-frequency front element with a 180° phase reversal between adjacent elements. At any given frequency, an 'active region' of 3 adjacent elements near λ/2 resonates like a 3-element Yagi, smoothly sliding backward or forward along the boom as frequency changes over a 3:1 to 10:1 bandwidth!",
+        pros: "Flat gain (~7.5 dBi) and low VSWR (<1.6:1) across huge multi-octave frequency spans without tuning.",
+        cons: "Lower peak gain than a same-boom-length single-band Yagi because only ~3 elements are active at once."
+      },
+      {
+        id: "discone",
+        name: "Ultra-Wideband Discone Scanner Antenna",
+        shortName: "Wideband Discone",
+        category: "10:1 Wideband Omni",
+        freqRange: "25 MHz – 6 GHz (VHF/UHF/SHF)",
+        defaultFreqMHz: 300.0,
+        defaultHeightLambda: 1.5,
+        defaultSpecial: 8,
+        specialLabel: "Skirt Cone Radials (6 to 16 Elements)",
+        specialMin: 6,
+        specialMax: 16,
+        baseGainDbi: 1.8,
+        impedanceOhms: 50,
+        balun: "Direct 50Ω Coax (Center to Top Disc, Shield to 60° Skirt Cone)",
+        polarization: "Vertical",
+        patternType: "360° Omnidirectional across 10:1 Frequency Span",
+        applications: "SDR wideband spectrum monitoring (HackRF/RTL-SDR), military naval/airfield comms, SIGINT collection",
+        theory: "A biconical derivative combining a top horizontal disc (diameter ≈ 0.7 × Lskirt) insulated by a narrow gap above a 60° flare-angle lower cone (skirt length ≈ 0.27λ at lowest cutoff frequency). Acts as a traveling-wave high-pass structure: above the lower cutoff frequency, input impedance remains tightly clustered around 50 Ω across a 10:1 frequency ratio (e.g., 25 MHz to 1.3 GHz).",
+        pros: "Unmatched 10:1 transmit/receive bandwidth with <2:1 VSWR and zero tuning required.",
+        cons: "Unity gain (~1.5–2 dBi); at frequencies >5× cutoff, the vertical lobe tilts slightly upward."
+      },
+      {
+        id: "qfh_helix",
+        name: "Quadrifilar Helix (QFH) & Axial Helical",
+        shortName: "QFH / Helical (RHCP)",
+        category: "Circularly Polarized Satcom",
+        freqRange: "137 MHz – 5.8 GHz",
+        defaultFreqMHz: 137.1,
+        defaultHeightLambda: 1.0,
+        defaultSpecial: 1,
+        specialLabel: "Mode (1 = Hemispherical QFH LEO, 2 = 8-Turn Axial Beam)",
+        specialMin: 1,
+        specialMax: 2,
+        baseGainDbi: 4.5,
+        impedanceOhms: 50,
+        balun: "Infinite Coax Balun + Self-Phasing Quadrature Loops",
+        polarization: "Right-Hand Circular Polarization (RHCP)",
+        patternType: "Cardioid Sky Hemisphere (QFH) or Axial Beam (Helix)",
+        applications: "137 MHz NOAA/Meteor LEO weather satellites, 1.54 GHz Inmarsat/Iridium, 1.7 GHz HRPT, GPS",
+        theory: "QFH uses two orthogonal bifilar helical loops sized slightly larger and slightly smaller than resonant self-phasing lengths (±2.5%) to produce a 90° quadrature phase shift, generating pure Circular Polarization across the entire sky hemisphere without a rotator. In Axial-Mode Helical (circumference ≈ 1λ, pitch ≈ 0.25λ), N turns produce a high-gain circularly polarized beam toward the satellite.",
+        pros: "Eliminates 20+ dB ionospheric Faraday polarization fading and satellite spin dropouts.",
+        cons: "Requires precise 3D loop geometry and quadrature phasing."
+      },
+      {
+        id: "patch_array",
+        name: "Microstrip Patch & Planar Phased Array",
+        shortName: "Patch / Phased Array",
+        category: "Planar Microwave / MIMO",
+        freqRange: "400 MHz – 81 GHz (UHF/SHF/EHF)",
+        defaultFreqMHz: 2440.0,
+        defaultHeightLambda: 2.0,
+        defaultSpecial: 4,
+        specialLabel: "Array Elements (1 = Single Patch, 2–12 = Phased Array)",
+        specialMin: 1,
+        specialMax: 12,
+        baseGainDbi: 8.5,
+        impedanceOhms: 50,
+        balun: "Inset Microstrip Feed or Quarter-Wave Transformer on PCB",
+        polarization: "Linear or Circular (Corner-Truncated GPS Patch)",
+        patternType: "Forward Hemisphere / Steerable Phased Beam",
+        applications: "Wi-Fi 6E/7 MIMO panels, 915 MHz LoRa directional, 1.57 GHz GPS, Starlink Dishy, 77 GHz Auto Radar",
+        theory: "A rectangular conductive patch of length L ≈ λ0 / (2√εeff) etched over a dielectric substrate (FR-4 or Rogers RO4350B) backed by a ground plane. Radiation occurs from fringing electric fields at the two open radiating edges, acting as two in-phase slots separated by λg/2. Combining N patches with digital phase shifters forms an electronically steerable phased array.",
+        pros: "Flat low-profile PCB manufacturing; built-in rear ground shield; easily arrayed into high-gain panels.",
+        cons: "Narrow substrate bandwidth (~2–5% on thin PCB); dielectric loss rises on standard FR-4 above 3 GHz."
+      },
+      {
+        id: "parabolic",
+        name: "Parabolic Reflector Dish & Horn Feed",
+        shortName: "Parabolic Dish",
+        category: "High-Gain Aperture",
+        freqRange: "1.2 GHz – 300 GHz (L-Band to THz)",
+        defaultFreqMHz: 9410.0,
+        defaultHeightLambda: 5.0,
+        defaultSpecial: 6,
+        specialLabel: "Dish Diameter in Wavelengths (3× to 12× Scale)",
+        specialMin: 3,
+        specialMax: 12,
+        baseGainDbi: 28.5,
+        impedanceOhms: 50,
+        balun: "Waveguide Probe / LNB Feedhorn at Focal Point (f/D ≈ 0.38)",
+        polarization: "Linear (H/V) or Circular (Septum Feed)",
+        patternType: "Razor-Thin Pencil Beam (BW ≈ 70° × λ / D)",
+        applications: "1.7 GHz HRPT weather sat, 5/11/24 GHz microwave backhaul, X-band radar, Ku/Ka satcom, radio astronomy",
+        theory: "Converts a spherical wavefront from a focal-point feedhorn into a coherent plane wave across circular aperture diameter D. Gain scales with the square of diameter in wavelengths: G = 10·log10[ η · (π·D/λ)² ], where aperture efficiency η ≈ 0.55–0.65. Doubling either dish diameter D or frequency f adds +6.0 dB of gain and halves the -3 dB beamwidth!",
+        pros: "Highest possible gain (20 to 60+ dBi) and narrowest beamwidth for extreme long-range space/terrestrial links.",
+        cons: "Requires sub-degree pointing accuracy at high frequencies; high wind loading unless perforated/radomed."
+      }
+    ];
+
+    /***************************************************************************
+     * 2. GROUND CONSTANTS & COAXIAL FEEDLINE DATABASE
+     ***************************************************************************/
+    const GROUND_TYPES = {
+      seawater: { name: "Seawater", sigma: 5.0, er: 80.0, reflBoost: 0.98, radialLossFactor: 0.05 },
+      marsh:    { name: "Wet Marsh / Loam", sigma: 0.03, er: 25.0, reflBoost: 0.86, radialLossFactor: 0.25 },
+      pastoral: { name: "Average Pastoral Soil", sigma: 0.006, er: 13.0, reflBoost: 0.72, radialLossFactor: 0.50 },
+      rocky:    { name: "Dry Forest / Granite", sigma: 0.0015, er: 5.0, reflBoost: 0.54, radialLossFactor: 0.85 },
+      desert:   { name: "Arid Sand / Urban", sigma: 0.0005, er: 3.5, reflBoost: 0.42, radialLossFactor: 1.15 }
+    };
+
+    // Coax loss model: dB per 100m at f_MHz: k1 * sqrt(f) + k2 * f
+    const COAX_TYPES = {
+      rg58:      { name: "RG-58 (50Ω)", k1: 1.35, k2: 0.0085, z0: 50, vf: 0.66 },
+      rg8x:      { name: "RG-8X (50Ω)", k1: 0.88, k2: 0.0055, z0: 50, vf: 0.78 },
+      lmr400:    { name: "LMR-400 (50Ω)", k1: 0.39, k2: 0.0016, z0: 50, vf: 0.85 },
+      heliax:    { name: "1/2\" Heliax LDF4", k1: 0.21, k2: 0.0008, z0: 50, vf: 0.88 },
+      ladder450: { name: "450Ω Window Line", k1: 0.08, k2: 0.0004, z0: 450, vf: 0.91 }
+    };
+
+    /***************************************************************************
+     * 3. SIMULATOR STATE & LOGARITHMIC FREQUENCY MAPPING
+     ***************************************************************************/
+    let state = {
+      antId: "ocf_dipole",
+      freqMHz: 14.074,
+      heightLambda: 0.45,
+      specialVal: 2,
+      groundKey: "pastoral",
+      distKm: 25.0,
+      foliageDepthM: 20,
+      foliageState: "wet_leaf",
+      iceState: "none",
+      rainRateMmHr: 5,
+      humidityPct: 70,
+      sfi: 135,
+      coaxKey: "lmr400",
+      coaxLenM: 30
+    };
+
+    // Map slider 0..1000 logarithmically between 0.01 MHz (10 kHz) and 100,000 MHz (100 GHz)
+    function sliderToFreqMHz(sliderVal) {
+      const minLog = Math.log10(0.01);
+      const maxLog = Math.log10(100000);
+      const logF = minLog + (sliderVal / 1000) * (maxLog - minLog);
+      return Math.pow(10, logF);
+    }
+
+    function freqMHzToSlider(freqMHz) {
+      const minLog = Math.log10(0.01);
+      const maxLog = Math.log10(100000);
+      const clamped = Math.max(0.01, Math.min(100000, freqMHz));
+      return Math.round(((Math.log10(clamped) - minLog) / (maxLog - minLog)) * 1000);
+    }
+
+    function formatFreqDisplay(fMHz) {
+      if (fMHz >= 1000) return `${(fMHz / 1000).toFixed(3).replace(/\.?0+$/, "")} GHz`;
+      if (fMHz >= 1) return `${fMHz.toFixed(3).replace(/\.?0+$/, "")} MHz`;
+      return `${(fMHz * 1000).toFixed(1)} kHz`;
+    }
+
+    function getBandBadge(fMHz) {
+      if (fMHz < 0.03) return "VLF (3–30 kHz)";
+      if (fMHz < 0.3) return "LF (Longwave)";
+      if (fMHz < 3.0) return "MF (Mediumwave)";
+      if (fMHz < 30.0) {
+        if (fMHz >= 3.5 && fMHz <= 4.0) return "HF (80m Band)";
+        if (fMHz >= 5.2 && fMHz <= 5.5) return "HF (60m NVIS)";
+        if (fMHz >= 7.0 && fMHz <= 7.3) return "HF (40m Band)";
+        if (fMHz >= 14.0 && fMHz <= 14.35) return "HF (20m DX)";
+        if (fMHz >= 28.0 && fMHz <= 29.7) return "HF (10m Band)";
+        return "HF (Shortwave)";
+      }
+      if (fMHz < 300.0) return "VHF (30–300 MHz)";
+      if (fMHz < 3000.0) return "UHF (300M–3G)";
+      if (fMHz < 30000.0) return "SHF (Centimeter)";
+      return "EHF (mmWave)";
+    }
+
+    /***************************************************************************
+     * 4. INITIALIZATION & UI BINDINGS
+     ***************************************************************************/
+    function initApp() {
+      renderAntennaSelectorStrip();
+      renderComparisonMatrix();
+      bindSimulatorControls();
+      selectAntennaArchitecture("ocf_dipole");
+    }
+
+    function renderAntennaSelectorStrip() {
+      const strip = document.getElementById("antennaSelectorStrip");
+      strip.innerHTML = ANTENNA_DB.map(a => `
+        <div class="ant-tile ${a.id === state.antId ? 'active' : ''}"
+             id="ant-tile-${a.id}"
+             onclick="selectAntennaArchitecture('${a.id}')">
+          <div>
+            <div class="ant-cat">${a.category}</div>
+            <div class="ant-name">${a.shortName}</div>
+          </div>
+          <div class="ant-bands">${a.freqRange}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderComparisonMatrix() {
+      const tbody = document.getElementById("antennaMatrixBody");
+      tbody.innerHTML = ANTENNA_DB.map(a => `
+        <tr id="matrix-row-${a.id}" onclick="selectAntennaArchitecture('${a.id}'); document.getElementById('sec-simulator').scrollIntoView({behavior:'smooth'});">
+          <td class="font-bold text-white">${a.name}</td>
+          <td class="font-mono text-sky-400 text-xs">${a.freqRange}</td>
+          <td class="font-mono text-emerald-400 font-bold">${a.baseGainDbi.toFixed(1)} dBi</td>
+          <td class="font-mono text-amber-300 text-xs">${a.impedanceOhms}Ω • ${a.balun.slice(0, 32)}</td>
+          <td class="text-xs text-slate-300">${a.polarization}</td>
+          <td class="text-xs text-purple-300 font-mono">${a.patternType}</td>
+          <td class="text-xs text-slate-300">${a.applications}</td>
+        </tr>
+      `).join("");
+    }
+
+    function selectAntennaArchitecture(antId) {
+      const ant = ANTENNA_DB.find(a => a.id === antId);
+      if (!ant) return;
+
+      state.antId = ant.id;
+      state.freqMHz = ant.defaultFreqMHz;
+      state.heightLambda = ant.defaultHeightLambda;
+      state.specialVal = ant.defaultSpecial;
+
+      // Update active UI tiles & matrix row
+      document.querySelectorAll(".ant-tile").forEach(el => el.classList.remove("active"));
+      const tile = document.getElementById(`ant-tile-${ant.id}`);
+      if (tile) tile.classList.add("active");
+
+      document.querySelectorAll("#antennaMatrixBody tr").forEach(el => el.classList.remove("active-row"));
+      const row = document.getElementById(`matrix-row-${ant.id}`);
+      if (row) row.classList.add("active-row");
+
+      // Sync sliders
+      document.getElementById("simFreqSlider").value = freqMHzToSlider(state.freqMHz);
+      document.getElementById("simHeightLambda").value = state.heightLambda;
+
+      const spSlider = document.getElementById("simSpecialSlider");
+      spSlider.min = ant.specialMin;
+      spSlider.max = ant.specialMax;
+      spSlider.value = ant.defaultSpecial;
+      document.getElementById("lblSpecialParamTitle").textContent = ant.specialLabel;
+
+      // Render Theory Card
+      document.getElementById("activeAntennaTheoryCard").innerHTML = `
+        <div class="control-group-title">
+          <span>Engineering Deep-Dive: ${ant.shortName}</span>
+          <span class="text-sky-400 text-[10px]">${ant.polarization}</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed mb-2.5">${ant.theory}</p>
+        <div class="grid grid-cols-1 gap-1.5 text-xs font-mono bg-slate-950/90 p-2.5 rounded border border-slate-800">
+          <div><span class="text-emerald-400 font-bold">✓ Strengths:</span> <span class="text-slate-300">${ant.pros}</span></div>
+          <div><span class="text-rose-400 font-bold">⚠ Tradeoffs:</span> <span class="text-slate-300">${ant.cons}</span></div>
+          <div><span class="text-amber-300 font-bold">⚙ Matching:</span> <span class="text-slate-300">${ant.balun}</span></div>
+        </div>
+      `;
+
+      runFullSimulation();
+    }
+
+    function setSimFreqMHz(fMHz) {
+      state.freqMHz = fMHz;
+      document.getElementById("simFreqSlider").value = freqMHzToSlider(fMHz);
+      runFullSimulation();
+    }
+
+    function bindSimulatorControls() {
+      document.getElementById("simFreqSlider").addEventListener("input", e => {
+        state.freqMHz = sliderToFreqMHz(parseFloat(e.target.value));
+        runFullSimulation();
+      });
+      document.getElementById("simHeightLambda").addEventListener("input", e => {
+        state.heightLambda = parseFloat(e.target.value);
+        runFullSimulation();
+      });
+      document.getElementById("simSpecialSlider").addEventListener("input", e => {
+        state.specialVal = parseFloat(e.target.value);
+        runFullSimulation();
+      });
+      document.getElementById("simGroundSelect").addEventListener("change", e => {
+        state.groundKey = e.target.value;
+        runFullSimulation();
+      });
+      document.getElementById("simDistSlider").addEventListener("input", e => {
+        state.distKm = parseFloat(e.target.value);
+        runFullSimulation();
+      });
+      document.getElementById("simFoliageDepth").addEventListener("input", e => {
+        state.foliageDepthM = parseFloat(e.target.value);
+        runFullSimulation();
+      });
+      document.getElementById("simFoliageState").addEventListener("change", e => {
+        state.foliageState = e.target.value;
+        runFullSimulation();
+      });
+      document.getElementById("simIceState").addEventListener("change", e => {
+        state.iceState = e.target.value;
+        runFullSimulation();
+      });
+      document.getElementById("simRainRate").addEventListener("input", e => {
+        state.rainRateMmHr = parseFloat(e.target.value);
+        runFullSimulation();
+      });
+      document.getElementById("simHumidity").addEventListener("input", e => {
+        state.humidityPct = parseFloat(e.target.value);
+        runFullSimulation();
+      });
+      document.getElementById("simSfiSlider").addEventListener("input", e => {
+        state.sfi = parseFloat(e.target.value);
+        runFullSimulation();
+      });
+      document.getElementById("simCoaxSelect").addEventListener("change", e => {
+        state.coaxKey = e.target.value;
+        runFullSimulation();
+      });
+      document.getElementById("simCoaxLen").addEventListener("input", e => {
+        state.coaxLenM = parseFloat(e.target.value);
+        runFullSimulation();
+      });
+    }
+
+    /***************************************************************************
+     * 5. MATHEMATICAL RF PHYSICS, RADIATION PATTERN & ITU-R SOLVER
+     ***************************************************************************/
+    function runFullSimulation() {
+      const ant = ANTENNA_DB.find(a => a.id === state.antId);
+      const ground = GROUND_TYPES[state.groundKey];
+      const coax = COAX_TYPES[state.coaxKey];
+      const fMHz = state.freqMHz;
+      const lambdaM = 299.792458 / fMHz;
+      const heightM = state.heightLambda * lambdaM;
+
+      // Update Control Readouts
+      document.getElementById("lblFreqVal").textContent = formatFreqDisplay(fMHz);
+      document.getElementById("bandBadgeSim").textContent = getBandBadge(fMHz);
+      document.getElementById("lblHeightVal").textContent = `${state.heightLambda.toFixed(2)} λ (${formatDim(heightM)})`;
+      document.getElementById("lblSpecialParamVal").textContent = formatSpecialVal(ant, state.specialVal);
+      document.getElementById("lblDistVal").textContent = `${state.distKm.toFixed(1)} km (${(state.distKm * 0.621371).toFixed(1)} mi)`;
+      document.getElementById("lblFoliageVal").textContent = `${state.foliageDepthM} m`;
+      document.getElementById("lblRainVal").textContent = `${state.rainRateMmHr} mm/hr`;
+      document.getElementById("lblHumidityVal").textContent = `${state.humidityPct}% RH @ 20°C`;
+
+      // Critical Frequency foF2 from Solar Flux Index (empirical ionospheric model)
+      const foF2MHz = +(3.2 + 0.031 * state.sfi).toFixed(2);
+      document.getElementById("lblSfiVal").textContent = `SFI ${state.sfi} (foF2 ≈ ${foF2MHz} MHz)`;
+      document.getElementById("lblCoaxLen").textContent = `${state.coaxLenM} m (${Math.round(state.coaxLenM * 3.28084)} ft)`;
+
+      // 1. Compute Azimuth Pattern E(phi) [0..359 deg]
+      const azPattern = new Float32Array(360);
+      let maxAz = 0.001;
+      for (let deg = 0; deg < 360; deg++) {
+        const phi = (deg * Math.PI) / 180;
+        let val = computeAzimuthGainLinear(ant.id, phi, state.specialVal);
+        azPattern[deg] = val;
+        if (val > maxAz) maxAz = val;
+      }
+      for (let deg = 0; deg < 360; deg++) azPattern[deg] /= maxAz;
+
+      // Calculate -3dB Half-Power Beamwidth (where normalized linear E >= 0.707)
+      let halfPowerCount = 0;
+      for (let deg = 0; deg < 360; deg++) {
+        if (azPattern[deg] >= 0.707) halfPowerCount++;
+      }
+      const beamwidthDeg = Math.min(360, halfPowerCount);
+      document.getElementById("azBeamwidthBadge").textContent =
+        beamwidthDeg >= 355 ? "Omni (360°)" : `-3dB BW: ${beamwidthDeg}°`;
+
+      // 2. Compute Elevation Pattern E(theta) [0..180 deg, where 0=Right Horizon, 90=Zenith, 180=Left Horizon]
+      const elPattern = new Float32Array(181);
+      let maxEl = 0.001;
+      let peakTakeoffDeg = 15;
+      let peakRightVal = 0;
+
+      for (let deg = 0; deg <= 180; deg++) {
+        const elevDeg = deg <= 90 ? deg : 180 - deg; // 0 at horizon, 90 at zenith
+        const isRearSide = deg > 90;
+        const elevRad = Math.max(0.01, (elevDeg * Math.PI) / 180);
+
+        let val = computeElevationGainLinear(ant.id, elevRad, state.heightLambda, ground, state.specialVal, isRearSide);
+        elPattern[deg] = val;
+        if (val > maxEl) maxEl = val;
+        if (deg <= 90 && val > peakRightVal) {
+          peakRightVal = val;
+          peakTakeoffDeg = deg;
+        }
+      }
+      for (let deg = 0; deg <= 180; deg++) elPattern[deg] /= maxEl;
+      document.getElementById("elTakeoffBadge").textContent = `Peak Takeoff: ${peakTakeoffDeg}°`;
+
+      // 3. Compute Effective Gain, Impedance, Ice Detuning & VSWR
+      let gainDbi = ant.baseGainDbi;
+      if (ant.id === "yagi") {
+        gainDbi = 7.2 + (state.specialVal - 3) * 1.15;
+      } else if (ant.id === "parabolic") {
+        const diamLambda = state.specialVal;
+        gainDbi = 10 * Math.log10(0.58 * Math.pow(Math.PI * diamLambda, 2));
+      } else if (ant.id === "patch_array") {
+        gainDbi = 6.5 + 10 * Math.log10(state.specialVal) * 0.85;
+      } else if (ant.id === "nvis" && state.specialVal === 1) {
+        gainDbi = 6.8; // Ground reflector wire boosts zenith gain by ~1.8 dB
+      }
+
+      // Ground reflection boost or radial loss
+      let groundLossDb = (1 - ground.reflBoost) * 3.5;
+      if (ant.id === "monopole" || ant.id === "collinear_58") {
+        const radials = state.specialVal;
+        const radialPenalty = (32 / Math.max(4, radials)) * ground.radialLossFactor;
+        groundLossDb = Math.min(6.5, radialPenalty);
+      }
+      const netGainDbi = +(gainDbi - groundLossDb * 0.5).toFixed(2);
+
+      // Feedpoint Impedance & Height Effect
+      let zFeed = ant.impedanceOhms;
+      if (ant.id === "dipole" || ant.id === "nvis") {
+        // Mutual ground impedance oscillation at low heights
+        zFeed = Math.round(73 - 28 * Math.cos(4 * Math.PI * state.heightLambda) * Math.exp(-state.heightLambda * 2.2));
+      }
+
+      // Base VSWR + Ice/Water Detuning
+      let vswr = 1.18;
+      if (ant.id === "dipole" || ant.id === "nvis") {
+        vswr = Math.max(1.05, Math.max(zFeed, 50) / Math.min(zFeed, 50));
+      } else if (ant.id === "ocf_dipole") {
+        vswr = (state.specialVal % 2 === 0 || state.specialVal === 1) ? 1.32 : 2.65;
+      }
+
+      let iceDetuneText = "Clean Wire (VF = 0.95)";
+      if (state.iceState === "rain_film") {
+        vswr = +(vswr + 0.35).toFixed(2);
+        iceDetuneText = "Wet Film (-1.8% Resonant Shift)";
+      } else if (state.iceState === "glaze_ice") {
+        vswr = +(vswr + 1.45).toFixed(2);
+        iceDetuneText = "6mm Glaze Ice (-5.5% Shift + Dielectric Loss)";
+      }
+
+      // 4. Coax Attenuation + Mismatch VSWR Loss
+      const alphaMatchedPer100m = coax.k1 * Math.sqrt(fMHz) + coax.k2 * fMHz;
+      const matchedLossDb = (alphaMatchedPer100m * state.coaxLenM) / 100;
+      const reflCoeff = (vswr - 1) / (vswr + 1);
+      const aLin = Math.pow(10, matchedLossDb / 10);
+      const totalCoaxLossDb = Math.min(45, 10 * Math.log10((aLin * aLin - Math.pow(reflCoeff, 2) * (aLin * aLin - 1)) / (aLin * (1 - reflCoeff * reflCoeff))));
+
+      // 5. Foliage Attenuation (ITU-R P.833-9)
+      let foliageLossDb = 0;
+      if (state.foliageDepthM > 0) {
+        let stateMult = state.foliageState === "wet_leaf" ? 1.35 : (state.foliageState === "leafless" ? 0.45 : 1.0);
+        // Specific attenuation rises with f^0.39
+        const rawFol = 0.18 * Math.pow(Math.max(1, fMHz), 0.32) * Math.pow(state.foliageDepthM, 0.62) * stateMult;
+        foliageLossDb = Math.min(42, rawFol);
+      }
+
+      // 6. Rain (ITU-R P.838) & Atmospheric Gas Absorption (ITU-R P.676: 22.2 GHz H2O & 60 GHz O2)
+      const fGHz = fMHz / 1000;
+      let rainSpecificDbKm = 0;
+      if (state.rainRateMmHr > 0 && fGHz > 0.8) {
+        const kRain = 0.00015 * Math.pow(fGHz, 1.95);
+        const alphaRain = 1.12 - 0.04 * Math.log10(Math.max(1, fGHz));
+        rainSpecificDbKm = kRain * Math.pow(state.rainRateMmHr, alphaRain);
+      }
+      // Oxygen 60 GHz resonance + Water Vapor 22.2 GHz resonance
+      const o2Peak = 14.8 * Math.exp(-Math.pow((fGHz - 60.0) / 4.2, 2));
+      const h2oPeak = (0.22 * (state.humidityPct / 60)) * Math.exp(-Math.pow((fGHz - 22.235) / 3.1, 2));
+      const continuumGas = 0.002 * Math.pow(fGHz, 1.3) * (state.humidityPct / 50);
+      const effectiveAtmPathKm = Math.min(state.distKm, 25); // Effective rain/troposphere cell length
+      const weatherLossDb = Math.min(60, (rainSpecificDbKm + o2Peak + h2oPeak + continuumGas) * effectiveAtmPathKm);
+
+      // 7. Free Space / Ionospheric Path Loss
+      const fsplDb = 32.45 + 20 * Math.log10(Math.max(0.01, fMHz)) + 20 * Math.log10(Math.max(0.1, state.distKm));
+
+      // Check Ionospheric NVIS / Skywave Penalty on HF
+      let ionoPenaltyDb = 0;
+      let verdictHtml = "";
+      if (fMHz >= 1.8 && fMHz <= 30.0) {
+        const secTheta = 1 / Math.cos((Math.min(72, 90 - peakTakeoffDeg) * Math.PI) / 180);
+        const mufMHz = +(foF2MHz * secTheta).toFixed(2);
+        if (ant.id === "nvis" || peakTakeoffDeg > 60) {
+          if (fMHz > foF2MHz) {
+            ionoPenaltyDb = 38;
+            verdictHtml = `<span class="text-rose-400 font-bold">⚠ NVIS PENETRATION WARNING:</span> Operating freq (${fMHz.toFixed(2)} MHz) exceeds critical frequency foF2 (${foF2MHz} MHz)! High-angle waves pierce straight into space. Drop below ${foF2MHz} MHz (e.g., 60m/80m).`;
+          } else {
+            verdictHtml = `<span class="text-emerald-400 font-bold">✓ NVIS UMBRELLA ACTIVE:</span> Freq (${fMHz.toFixed(2)} MHz) is below foF2 (${foF2MHz} MHz). ${peakTakeoffDeg}° zenith cone reflects cleanly across 0–400 km with zero skip zone.`;
+          }
+        } else {
+          if (fMHz > mufMHz) {
+            ionoPenaltyDb = 28;
+            verdictHtml = `<span class="text-amber-300 font-bold">⚠ ABOVE OBLIQUE MUF (${mufMHz} MHz):</span> Skywave refracts weakly into space; link relies on surface groundwave/line-of-sight.`;
+          } else {
+            verdictHtml = `<span class="text-sky-300 font-bold">✓ SKYWAVE DX ACTIVE:</span> Takeoff ${peakTakeoffDeg}° refracts off F2-layer (MUF ≈ ${mufMHz} MHz).`;
+          }
+        }
+      } else {
+        verdictHtml = `<span class="text-slate-300">Line-of-Sight / Tropospheric Propagation (${getBandBadge(fMHz)}). Fresnel Zone clearance and foliage/rain dominate link margin.</span>`;
+      }
+
+      // Total Link Budget (Assuming 100W = +50 dBm TX, RX Antenna Gain = +2.15 dBi)
+      const totalEnvAndCoaxLoss = totalCoaxLossDb + groundLossDb + foliageLossDb + weatherLossDb;
+      const rxPowerDbm = +(50.0 + netGainDbi + 2.15 - fsplDb - totalEnvAndCoaxLoss - ionoPenaltyDb).toFixed(1);
+
+      // Update KPI Cards & Bars
+      document.getElementById("kpiGain").textContent = `${netGainDbi} dBi`;
+      document.getElementById("kpiGainDbd").textContent = `${(netGainDbi - 2.15).toFixed(2)} dBd (net)`;
+      document.getElementById("kpiTakeoff").textContent = `${peakTakeoffDeg}° Elev`;
+      document.getElementById("kpiModeSuitability").textContent =
+        peakTakeoffDeg >= 60 ? "Optimal: NVIS Regional (0–400km)" :
+        peakTakeoffDeg <= 22 ? "Optimal: Long-Haul DX / Horizon" : "Optimal: Medium-Range All-Around";
+      document.getElementById("kpiImpedance").textContent = `${zFeed} Ω`;
+      document.getElementById("kpiBalun").textContent = ant.balun.slice(0, 34);
+      document.getElementById("kpiVswr").textContent = `${vswr.toFixed(2)} : 1`;
+      document.getElementById("kpiIceDetune").textContent = iceDetuneText;
+
+      const vswrBadge = document.getElementById("vswrStatusBadge");
+      if (vswr < 1.6) {
+        vswrBadge.textContent = "RESONANT MATCH";
+        vswrBadge.className = "px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px]";
+      } else if (vswr < 2.5) {
+        vswrBadge.textContent = "MODERATE SWR";
+        vswrBadge.className = "px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 text-[10px]";
+      } else {
+        vswrBadge.textContent = "HIGH SWR / TUNER REQ";
+        vswrBadge.className = "px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 text-[10px]";
+      }
+
+      // Update Attenuation Bars
+      updateLossBar("lossCoaxTxt", "lossCoaxBar", totalCoaxLossDb, 20);
+      updateLossBar("lossGroundTxt", "lossGroundBar", groundLossDb, 10);
+      updateLossBar("lossFoliageTxt", "lossFoliageBar", foliageLossDb, 35);
+      updateLossBar("lossWeatherTxt", "lossWeatherBar", weatherLossDb, 35);
+      updateLossBar("lossFsplTxt", "lossFsplBar", fsplDb + ionoPenaltyDb, 160);
+
+      let sUnit = "Below Noise Floor";
+      if (rxPowerDbm >= -53) sUnit = `S9+${Math.round(rxPowerDbm + 73)}dB`;
+      else if (rxPowerDbm >= -73) sUnit = "S9 Strong";
+      else if (rxPowerDbm >= -121) sUnit = `S${Math.max(1, Math.round((rxPowerDbm + 127) / 6))}`;
+
+      document.getElementById("estRxDbm").textContent = `${rxPowerDbm} dBm (${sUnit})`;
+      document.getElementById("nvisPropagationVerdict").innerHTML = verdictHtml;
+
+      // Draw Canvases & Blueprint
+      drawAzimuthPolarCanvas(azPattern, ant);
+      drawElevationPolarCanvas(elPattern, peakTakeoffDeg, ant);
+      const primaryDimStr = renderBlueprintSvg(ant, lambdaM, fMHz);
+
+      // Update Top Cascade Sync Bar
+      document.getElementById("syncAntName").textContent = ant.shortName;
+      document.getElementById("syncFreqHeight").textContent = `${formatFreqDisplay(fMHz)} @ ${state.heightLambda.toFixed(2)}λ`;
+      document.getElementById("syncTakeoffGain").textContent = `${peakTakeoffDeg}° Elev • ${netGainDbi} dBi`;
+      document.getElementById("syncEnvLoss").textContent = `-${totalEnvAndCoaxLoss.toFixed(1)} dB`;
+      document.getElementById("syncCutDim").textContent = primaryDimStr;
+    }
+
+    function updateLossBar(txtId, barId, valDb, scaleMax) {
+      document.getElementById(txtId).textContent = `-${valDb.toFixed(1)} dB`;
+      const pct = Math.max(3, Math.min(100, (valDb / scaleMax) * 100));
+      document.getElementById(barId).style.width = `${pct}%`;
+    }
+
+    function formatSpecialVal(ant, val) {
+      if (ant.id === "dipole") return `n = ${val} (${val * 0.5}λ harmonic)`;
+      if (ant.id === "ocf_dipole") return `Harmonic n = ${val} (67%/33% Split)`;
+      if (ant.id === "nvis") return val === 1 ? "With 0.52λ Ground Reflector" : "Dipole Only (No Ground Wire)";
+      if (ant.id === "monopole" || ant.id === "collinear_58") return `${val} Ground Radials`;
+      if (ant.id === "efhw") return `Harmonic n = ${val} (${val} × λ/2)`;
+      if (ant.id === "mag_loop") return `${(val * 0.002).toFixed(2)}λ Loop Circumference`;
+      if (ant.id === "jpole") return val === 2 ? "Folded Slim Jim (Low-Angle)" : "Standard J-Pole";
+      if (ant.id === "yagi") return `${val}-Element Yagi-Uda`;
+      if (ant.id === "lpda") return `${val} Log-Periodic Dipole Pairs`;
+      if (ant.id === "discone") return `${val} Skirt Cone Radials`;
+      if (ant.id === "qfh_helix") return val === 1 ? "QFH Hemispherical" : "8-Turn Axial Helix Beam";
+      if (ant.id === "patch_array") return `${val}×${val} Planar Array`;
+      if (ant.id === "parabolic") return `Dish Diameter D = ${val}λ`;
+      return `${val}`;
+    }
+
+    // Azimuth Field Equation E(phi)
+    function computeAzimuthGainLinear(antId, phi, specialVal) {
+      switch (antId) {
+        case "monopole":
+        case "collinear_58":
+        case "jpole":
+        case "discone":
+          return 1.0; // True 360° Omnidirectional
+        case "qfh_helix":
+          return specialVal === 1 ? 0.96 + 0.04 * Math.cos(2 * phi) : Math.pow(Math.max(0, Math.cos(phi)), 2.5) + 0.08;
+        case "nvis":
+          return 0.78 + 0.22 * Math.abs(Math.cos(phi)); // Near-circular overhead
+        case "dipole": {
+          const n = Math.max(1, specialVal);
+          const thetaWire = Math.PI / 2 - phi;
+          const s = Math.sin(thetaWire);
+          if (Math.abs(s) < 1e-4) return 0.02;
+          const num = n % 2 === 1 ? Math.cos((n * Math.PI / 2) * Math.cos(thetaWire)) : Math.sin((n * Math.PI / 2) * Math.cos(thetaWire));
+          return Math.abs(num / s) + 0.03;
+        }
+        case "ocf_dipole": {
+          const n = Math.max(1, specialVal);
+          const thetaWire = Math.PI / 2 - phi;
+          const s = Math.sin(thetaWire);
+          if (Math.abs(s) < 1e-4) return 0.04;
+          const base = Math.abs(Math.sin((n * Math.PI / 2) * Math.cos(thetaWire) + 0.35) / s);
+          const skew = 1.0 + 0.28 * Math.sin(phi); // Skewed toward longer 67% leg
+          return base * skew + 0.05;
+        }
+        case "efhw": {
+          const n = Math.max(1, specialVal);
+          const thetaWire = Math.PI / 2 - phi;
+          const s = Math.sin(thetaWire);
+          if (Math.abs(s) < 1e-4) return 0.04;
+          const standing = Math.abs(Math.sin((n * Math.PI / 2) * (Math.cos(thetaWire) - 0.15)) / s);
+          return standing * (1 + 0.22 * Math.cos(phi)) + 0.04;
+        }
+        case "mag_loop":
+          return Math.abs(Math.cos(phi)) + 0.015; // Sharp figure-8 with deep ±90° nulls
+        case "yagi": {
+          const nElem = Math.max(3, specialVal);
+          const directivityExp = 1.4 + nElem * 0.55;
+          const fwd = Math.pow(Math.max(0, Math.cos(phi)), directivityExp);
+          const backLobe = 0.07 * Math.pow(Math.max(0, -Math.cos(phi)), 2);
+          const sideLobe = 0.06 * Math.abs(Math.sin(phi * 2.5));
+          return fwd + backLobe + sideLobe;
+        }
+        case "lpda": {
+          const fwd = Math.pow(Math.max(0, Math.cos(phi)), 2.2);
+          const back = 0.09 * Math.pow(Math.max(0, -Math.cos(phi)), 1.8);
+          return fwd + back + 0.04;
+        }
+        case "patch_array": {
+          const n = Math.max(1, specialVal);
+          const fwd = Math.pow(Math.max(0, Math.cos(phi)), 1.2 + n * 0.45);
+          return fwd + 0.04;
+        }
+        case "parabolic": {
+          const dLambda = Math.max(3, specialVal);
+          const u = Math.PI * dLambda * Math.sin(phi);
+          const airy = Math.abs(u) < 1e-4 ? 1.0 : Math.abs((2 * Math.sin(u)) / u);
+          const frontMask = Math.cos(phi) > 0 ? 1.0 : 0.04;
+          return airy * frontMask + 0.02;
+        }
+        default:
+          return Math.abs(Math.cos(phi));
+      }
+    }
+
+    // Elevation Field Equation E(elev) including Sommerfeld/Fresnel Ground Reflection Factor
+    function computeElevationGainLinear(antId, elevRad, hLambda, ground, specialVal, isRearSide) {
+      const sinE = Math.sin(elevRad);
+      const cosE = Math.cos(elevRad);
+
+      // Ground Reflection Factor: 2 * sin(2 * pi * h * sin(elev))
+      const phaseH = 2 * Math.PI * hLambda * sinE;
+      const groundFactor = Math.sqrt(1 + ground.reflBoost * ground.reflBoost - 2 * ground.reflBoost * Math.cos(2 * phaseH));
+
+      switch (antId) {
+        case "nvis": {
+          const reflBoost = specialVal === 1 ? (1 + 0.35 * sinE) : 1.0;
+          return Math.pow(sinE, 0.4) * Math.abs(Math.sin(phaseH)) * reflBoost;
+        }
+        case "dipole":
+        case "ocf_dipole":
+        case "efhw": {
+          return groundFactor * (0.25 + 0.75 * Math.pow(cosE, 0.35));
+        }
+        case "monopole": {
+          // Pseudo-Brewster angle dip at very low angles over lossy soil
+          const brewsterEnv = Math.pow(sinE, 1.0 - ground.reflBoost * 0.75) * cosE;
+          return brewsterEnv * (1 + 0.4 * Math.cos(phaseH));
+        }
+        case "collinear_58": {
+          // 5/8λ compresses main lobe + creates small 45° secondary lobe
+          const mainLobe = Math.pow(cosE, 2.6) * Math.pow(sinE, 0.35);
+          const highAngleLobe = 0.26 * Math.pow(Math.sin(2.2 * elevRad), 2);
+          return mainLobe + highAngleLobe;
+        }
+        case "jpole": {
+          const exp = specialVal === 2 ? 2.4 : 1.6; // Slim Jim compresses lower than J-Pole
+          return Math.pow(cosE, exp) * Math.pow(sinE, 0.25);
+        }
+        case "mag_loop": {
+          // Small vertical loop radiates strongly at both low AND high elevation angles!
+          return 0.45 + 0.55 * cosE;
+        }
+        case "yagi":
+        case "lpda": {
+          const dirGain = isRearSide ? 0.12 : 1.0;
+          return dirGain * Math.pow(cosE, 1.8) * groundFactor;
+        }
+        case "qfh_helix": {
+          if (specialVal === 1) {
+            // Cardioid hemispherical pattern peaking toward zenith/45° for LEO passes
+            return 0.3 + 0.7 * Math.sin(elevRad * 0.95);
+          }
+          return (isRearSide ? 0.08 : 1.0) * Math.pow(Math.sin(elevRad + 0.4), 3);
+        }
+        case "patch_array": {
+          return (isRearSide ? 0.15 : 1.0) * Math.pow(cosE, 1.5) * Math.pow(sinE, 0.2);
+        }
+        case "parabolic": {
+          if (isRearSide) return 0.03;
+          const beamElev = 0.18; // Aimed slightly above horizon
+          return Math.exp(-Math.pow((elevRad - beamElev) / (0.28 / (specialVal / 4)), 2)) + 0.03;
+        }
+        default:
+          return cosE * groundFactor;
+      }
+    }
+
+    /***************************************************************************
+     * 6. POLAR CANVAS RENDERERS (AZIMUTH 360° & ELEVATION 180°)
+     ***************************************************************************/
+    function drawAzimuthPolarCanvas(azPattern, ant) {
+      const canvas = document.getElementById("azimuthCanvas");
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width;
+      const H = canvas.height;
+      const cx = W / 2;
+      const cy = H / 2;
+      const R = W * 0.40;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Concentric dB rings (0 dB, -3 dB, -10 dB, -20 dB)
+      const rings = [
+        { r: R, label: "0dB", color: "rgba(56, 189, 248, 0.28)", dash: [] },
+        { r: R * 0.707, label: "-3dB", color: "rgba(244, 63, 94, 0.55)", dash: [4, 4] },
+        { r: R * 0.50, label: "-6dB", color: "rgba(56, 189, 248, 0.16)", dash: [] },
+        { r: R * 0.25, label: "-12dB", color: "rgba(56, 189, 248, 0.14)", dash: [] }
+      ];
+
+      rings.forEach(ring => {
+        ctx.beginPath();
+        ctx.setLineDash(ring.dash);
+        ctx.strokeStyle = ring.color;
+        ctx.lineWidth = 1;
+        ctx.arc(cx, cy, ring.r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      // Radial spokes every 30°
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.15)";
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "10px 'JetBrains Mono', monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      for (let deg = 0; deg < 360; deg += 30) {
+        const rad = ((deg - 90) * Math.PI) / 180;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(rad) * R, cy + Math.sin(rad) * R);
+        ctx.stroke();
+
+        const lblR = R + 16;
+        ctx.fillText(`${deg}°`, cx + Math.cos(rad) * lblR, cy + Math.sin(rad) * lblR);
+      }
+
+      // Draw Azimuth Radiation Pattern Polygon
+      ctx.beginPath();
+      for (let deg = 0; deg < 360; deg++) {
+        const rad = ((deg - 90) * Math.PI) / 180;
+        const mag = azPattern[deg] * R;
+        const px = cx + Math.cos(rad) * mag;
+        const py = cy + Math.sin(rad) * mag;
+        if (deg === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+
+      const grad = ctx.createRadialGradient(cx, cy, 4, cx, cy, R);
+      grad.addColorStop(0, "rgba(56, 189, 248, 0.10)");
+      grad.addColorStop(1, "rgba(56, 189, 248, 0.42)");
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+
+      // Center Antenna Axis Indicator
+      ctx.fillStyle = "#f59e0b";
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawElevationPolarCanvas(elPattern, peakTakeoffDeg, ant) {
+      const canvas = document.getElementById("elevationCanvas");
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width;
+      const H = canvas.height;
+      const cx = W / 2;
+      const cy = H * 0.78;
+      const R = W * 0.42;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Draw NVIS Zenith Cone (60° to 120°)
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, R, (-120 * Math.PI) / 180, (-60 * Math.PI) / 180);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(192, 132, 252, 0.09)";
+      ctx.fill();
+
+      // Semi-circular elevation rings
+      [1.0, 0.707, 0.45].forEach((mult, idx) => {
+        ctx.beginPath();
+        ctx.setLineDash(idx === 1 ? [4, 4] : []);
+        ctx.strokeStyle = idx === 1 ? "rgba(244, 63, 94, 0.5)" : "rgba(16, 185, 129, 0.22)";
+        ctx.arc(cx, cy, R * mult, Math.PI, 0);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      // Angle spokes (0°, 30°, 60°, 90° Zenith)
+      ctx.font = "10px 'JetBrains Mono', monospace";
+      ctx.fillStyle = "#94a3b8";
+      ctx.textAlign = "center";
+
+      for (let el = 0; el <= 180; el += 30) {
+        const rad = (-el * Math.PI) / 180;
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(16, 185, 129, 0.16)";
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(rad) * R, cy + Math.sin(rad) * R);
+        ctx.stroke();
+
+        const dispAngle = el <= 90 ? `${el}°` : `${180 - el}°`;
+        const lblR = R + 14;
+        ctx.fillText(dispAngle, cx + Math.cos(rad) * lblR, cy + Math.sin(rad) * lblR);
+      }
+
+      // Draw Ground Soil Strata Base
+      ctx.fillStyle = "#0b2922";
+      ctx.fillRect(16, cy, W - 32, 34);
+      ctx.strokeStyle = "#10b981";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(16, cy);
+      ctx.lineTo(W - 16, cy);
+      ctx.stroke();
+
+      ctx.fillStyle = "#6ee7b7";
+      ctx.font = "10px 'JetBrains Mono', monospace";
+      ctx.fillText(`GROUND SURFACE (${GROUND_TYPES[state.groundKey].name})`, cx, cy + 18);
+
+      // Draw Elevation Radiation Pattern Lobe
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      for (let deg = 0; deg <= 180; deg++) {
+        const rad = (-deg * Math.PI) / 180;
+        const mag = elPattern[deg] * R;
+        ctx.lineTo(cx + Math.cos(rad) * mag, cy + Math.sin(rad) * mag);
+      }
+      ctx.closePath();
+
+      const grad = ctx.createRadialGradient(cx, cy, 5, cx, cy, R);
+      grad.addColorStop(0, "rgba(16, 185, 129, 0.12)");
+      grad.addColorStop(1, "rgba(16, 185, 129, 0.48)");
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      ctx.strokeStyle = "#10b981";
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+
+      // Peak Takeoff Angle Ray
+      const peakRad = (-peakTakeoffDeg * Math.PI) / 180;
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 1.6;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(peakRad) * (R + 6), cy + Math.sin(peakRad) * (R + 6));
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    /***************************************************************************
+     * 7. CAD CUT-SHEET & BALUN SCHEMATIC BLUEPRINT GENERATOR (SVG)
+     ***************************************************************************/
+    function formatDim(meters) {
+      if (meters >= 100) return `${meters.toFixed(1)} m (${(meters * 3.28084).toFixed(0)} ft)`;
+      if (meters >= 1) return `${meters.toFixed(2)} m (${(meters * 3.28084).toFixed(2)} ft)`;
+      if (meters >= 0.01) return `${(meters * 100).toFixed(2)} cm (${(meters * 39.3701).toFixed(2)} in)`;
+      return `${(meters * 1000).toFixed(2)} mm`;
+    }
+
+    function renderBlueprintSvg(ant, lambdaM, fMHz) {
+      const svg = document.getElementById("blueprintSvg");
+      const vf = 0.95; // Standard wire velocity factor
+      const halfWaveM = (lambdaM / 2) * vf;
+      const quarterWaveM = (lambdaM / 4) * vf;
+      const heightM = state.heightLambda * lambdaM;
+      let primaryCutStr = formatDim(halfWaveM);
+
+      if (ant.id === "ocf_dipole") {
+        const totalM = halfWaveM * state.specialVal;
+        const legLong = totalM * 0.67;
+        const legShort = totalM * 0.33;
+        primaryCutStr = `${formatDim(totalM)} Total`;
+
+        svg.innerHTML = `
+          <!-- Supports & Ground -->
+          <line x1="40" y1="205" x2="640" y2="205" stroke="#10b981" stroke-width="2"/>
+          <line x1="75" y1="45" x2="75" y2="205" stroke="#64748b" stroke-width="3" stroke-dasharray="4 2"/>
+          <line x1="605" y1="45" x2="605" y2="205" stroke="#64748b" stroke-width="3" stroke-dasharray="4 2"/>
+
+          <!-- Long Leg (67%) & Short Leg (33%) -->
+          <line x1="80" y1="68" x2="425" y2="68" stroke="#38bdf8" stroke-width="4"/>
+          <line x1="449" y1="68" x2="600" y2="68" stroke="#f59e0b" stroke-width="4"/>
+
+          <!-- 4:1 Current Balun Box -->
+          <rect x="415" y="54" width="44" height="28" rx="5" fill="#1e293b" stroke="#c084fc" stroke-width="2"/>
+          <text x="437" y="72" fill="#e9d5ff" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">4:1</text>
+
+          <!-- Coax Drop & 1:1 Line Isolator Choke -->
+          <line x1="437" y1="82" x2="437" y2="205" stroke="#94a3b8" stroke-width="2.5"/>
+          <rect x="427" y="118" width="20" height="16" rx="3" fill="#0f172a" stroke="#38bdf8"/>
+          <text x="515" y="130" fill="#7dd3fc" font-size="10" font-family="monospace">← 1:1 Choke Balun</text>
+
+          <!-- Dimension Labels -->
+          <text x="250" y="50" fill="#38bdf8" font-size="11.5" font-family="monospace" text-anchor="middle" font-weight="bold">
+            Long Leg (67%): ${formatDim(legLong)}
+          </text>
+          <text x="530" y="50" fill="#fbbf24" font-size="11.5" font-family="monospace" text-anchor="middle" font-weight="bold">
+            Short Leg (33%): ${formatDim(legShort)}
+          </text>
+          <text x="340" y="25" fill="#f8fafc" font-size="12" font-family="monospace" text-anchor="middle" font-weight="bold">
+            Total Span: ${formatDim(totalM)} • Height: ${formatDim(heightM)} (${state.heightLambda.toFixed(2)}λ)
+          </text>
+          <text x="340" y="195" fill="#6ee7b7" font-size="10.5" font-family="monospace" text-anchor="middle">
+            Feedpoint Z ≈ 200–270 Ω → 4:1 Guanella Current Balun → 50 Ω Coax
+          </text>
+        `;
+      } else if (ant.id === "nvis" || ant.id === "dipole") {
+        const legM = halfWaveM / 2;
+        const reflM = lambdaM * 0.52 * vf;
+        primaryCutStr = `${formatDim(halfWaveM)} Dipole`;
+
+        svg.innerHTML = `
+          <line x1="40" y1="200" x2="640" y2="200" stroke="#10b981" stroke-width="2"/>
+          <!-- NVIS Ground Reflector Wire -->
+          ${ant.id === "nvis" && state.specialVal === 1 ? `
+            <line x1="90" y1="194" x2="590" y2="194" stroke="#c084fc" stroke-width="3" stroke-dasharray="6 3"/>
+            <text x="340" y="186" fill="#e9d5ff" font-size="10.5" font-family="monospace" text-anchor="middle">
+              Passive Ground Reflector Wire (0.52λ): ${formatDim(reflM)}
+            </text>
+          ` : ''}
+          <!-- Left & Right Legs -->
+          <line x1="100" y1="92" x2="325" y2="92" stroke="#38bdf8" stroke-width="4"/>
+          <line x1="355" y1="92" x2="580" y2="92" stroke="#38bdf8" stroke-width="4"/>
+          <rect x="323" y="80" width="34" height="24" rx="4" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+          <text x="340" y="96" fill="#6ee7b7" font-size="10" font-family="monospace" text-anchor="middle">1:1</text>
+          <line x1="340" y1="104" x2="340" y2="200" stroke="#94a3b8" stroke-width="2.5"/>
+
+          <text x="210" y="74" fill="#38bdf8" font-size="11.5" font-family="monospace" text-anchor="middle" font-weight="bold">
+            Leg A (λ/4): ${formatDim(legM)}
+          </text>
+          <text x="470" y="74" fill="#38bdf8" font-size="11.5" font-family="monospace" text-anchor="middle" font-weight="bold">
+            Leg B (λ/4): ${formatDim(legM)}
+          </text>
+          <text x="340" y="34" fill="#f8fafc" font-size="12" font-family="monospace" text-anchor="middle" font-weight="bold">
+            Total Resonant Length: ${formatDim(halfWaveM)} • Height h = ${formatDim(heightM)} (${state.heightLambda.toFixed(2)}λ)
+          </text>
+        `;
+      } else if (ant.id === "yagi") {
+        const nElem = state.specialVal;
+        const reflLen = lambdaM * 0.495;
+        const drvLen = lambdaM * 0.473;
+        const dir1Len = lambdaM * 0.440;
+        const boomLen = lambdaM * (0.18 * (nElem - 1));
+        primaryCutStr = `${formatDim(boomLen)} Boom (${nElem}-El)`;
+
+        let elemsSvg = "";
+        const startX = 110;
+        const stepX = Math.min(72, 460 / Math.max(2, nElem - 1));
+        for (let i = 0; i < nElem; i++) {
+          const x = startX + i * stepX;
+          const halfH = i === 0 ? 78 : (i === 1 ? 72 : Math.max(48, 66 - i * 2));
+          const col = i === 0 ? "#f59e0b" : (i === 1 ? "#10b981" : "#38bdf8");
+          elemsSvg += `<line x1="${x}" y1="${115 - halfH}" x2="${x}" y2="${115 + halfH}" stroke="${col}" stroke-width="${i === 1 ? 4 : 3}"/>`;
+        }
+
+        svg.innerHTML = `
+          <!-- Boom -->
+          <line x1="90" y1="115" x2="${startX + (nElem - 1) * stepX + 30}" y2="115" stroke="#64748b" stroke-width="5"/>
+          ${elemsSvg}
+          <text x="110" y="26" fill="#fbbf24" font-size="10.5" font-family="monospace" text-anchor="middle">Refl: ${formatDim(reflLen)}</text>
+          <text x="${startX + stepX}" y="212" fill="#34d399" font-size="10.5" font-family="monospace" text-anchor="middle">Driven: ${formatDim(drvLen)}</text>
+          <text x="${startX + 2 * stepX + 40}" y="26" fill="#38bdf8" font-size="10.5" font-family="monospace" text-anchor="middle">Dir 1: ${formatDim(dir1Len)}</text>
+          <text x="530" y="110" fill="#10b981" font-size="12" font-family="monospace" font-weight="bold">→ BEAM</text>
+          <text x="360" y="226" fill="#f8fafc" font-size="11" font-family="monospace" text-anchor="middle">
+            Total Boom Length: ${formatDim(boomLen)} (Spacing ≈ 0.18λ)
+          </text>
+        `;
+      } else if (ant.id === "monopole" || ant.id === "collinear_58") {
+        const vertM = ant.id === "collinear_58" ? lambdaM * 0.625 * vf : quarterWaveM;
+        const radM = lambdaM * 0.255;
+        primaryCutStr = `${formatDim(vertM)} Whip`;
+
+        svg.innerHTML = `
+          <line x1="40" y1="195" x2="640" y2="195" stroke="#10b981" stroke-width="2"/>
+          <!-- Vertical Radiator -->
+          <line x1="340" y1="35" x2="340" y2="155" stroke="#38bdf8" stroke-width="5"/>
+          <!-- Drooping Radials -->
+          <line x1="340" y1="155" x2="210" y2="195" stroke="#f59e0b" stroke-width="3"/>
+          <line x1="340" y1="155" x2="470" y2="195" stroke="#f59e0b" stroke-width="3"/>
+          <line x1="340" y1="155" x2="265" y2="195" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 2"/>
+          <line x1="340" y1="155" x2="415" y2="195" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 2"/>
+          <rect x="326" y="146" width="28" height="18" rx="3" fill="#1e293b" stroke="#c084fc" stroke-width="2"/>
+
+          <text x="465" y="90" fill="#38bdf8" font-size="12" font-family="monospace" font-weight="bold">
+            Vertical Whip: ${formatDim(vertM)}
+          </text>
+          <text x="495" y="120" fill="#fbbf24" font-size="11" font-family="monospace">
+            ${state.specialVal}× Radials (λ/4): ${formatDim(radM)} each
+          </text>
+          <text x="340" y="222" fill="#cbd5e1" font-size="11" font-family="monospace" text-anchor="middle">
+            ${ant.id === "collinear_58" ? "Base Series Coil Resonates 0.625λ to 50Ω" : "45° Drooping Radials Raise 36.5Ω Base Impedance to 50Ω"}
+          </text>
+        `;
+      } else {
+        // Universal Dimensioned Schematic for EFHW, J-Pole, Mag Loop, Discone, QFH, Patch, Parabolic
+        let specA = `Primary Element (λ/2): ${formatDim(halfWaveM)}`;
+        let specB = `Quarter-Wave Stub / Radial (λ/4): ${formatDim(quarterWaveM)}`;
+
+        if (ant.id === "efhw") {
+          const efhwLen = halfWaveM * state.specialVal;
+          const counterpoise = lambdaM * 0.05;
+          primaryCutStr = `${formatDim(efhwLen)} Wire`;
+          specA = `EFHW Radiator Wire: ${formatDim(efhwLen)}`;
+          specB = `Counterpoise (0.05λ): ${formatDim(counterpoise)} • 49:1 Toroid Unun`;
+        } else if (ant.id === "mag_loop") {
+          const circM = lambdaM * (state.specialVal * 0.002);
+          const diamM = circM / Math.PI;
+          primaryCutStr = `${formatDim(diamM)} Loop Ø`;
+          specA = `Main Loop Diameter: ${formatDim(diamM)} (Circumference: ${formatDim(circM)})`;
+          specB = `Faraday Coupling Loop Ø (1/5th): ${formatDim(diamM * 0.2)}`;
+        } else if (ant.id === "jpole") {
+          const totalJ = lambdaM * 0.75 * vf;
+          const stubJ = quarterWaveM;
+          primaryCutStr = `${formatDim(totalJ)} Tall`;
+          specA = `Long Section (0.75λ): ${formatDim(totalJ)}`;
+          specB = `Parallel Matching Stub (0.25λ): ${formatDim(stubJ)} • 50Ω Tap @ ${formatDim(stubJ * 0.14)}`;
+        } else if (ant.id === "parabolic") {
+          const dishD = lambdaM * state.specialVal;
+          const focalLen = dishD * 0.38;
+          primaryCutStr = `${formatDim(dishD)} Dish Ø`;
+          specA = `Parabolic Dish Diameter (${state.specialVal}λ): ${formatDim(dishD)}`;
+          specB = `Focal Length (f/D = 0.38): ${formatDim(focalLen)} • Waveguide Feed λ/2 = ${formatDim(halfWaveM)}`;
+        }
+
+        svg.innerHTML = `
+          <rect x="45" y="32" width="590" height="170" rx="10" fill="#071124" stroke="#22355c"/>
+          <line x1="95" y1="95" x2="585" y2="95" stroke="#38bdf8" stroke-width="4"/>
+          <circle cx="95" cy="95" r="7" fill="#f59e0b"/>
+          <circle cx="585" cy="95" r="5" fill="#10b981"/>
+
+          <text x="340" y="65" fill="#38bdf8" font-size="13" font-family="monospace" text-anchor="middle" font-weight="bold">
+            ${specA}
+          </text>
+          <text x="340" y="135" fill="#fbbf24" font-size="12" font-family="monospace" text-anchor="middle">
+            ${specB}
+          </text>
+          <text x="340" y="175" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle">
+            Free-Space Wavelength λ = ${formatDim(lambdaM)} @ ${formatFreqDisplay(fMHz)}
+          </text>
+        `;
+      }
+
+      return primaryCutStr;
+    }
+
+    window.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>
