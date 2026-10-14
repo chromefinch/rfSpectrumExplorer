@@ -1,0 +1,3806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global RF Spectrum & SigIDWiki Signal Identification Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #050811;
+      --bg-1: #0a101f;
+      --bg-2: #10192e;
+      --bg-3: #182542;
+      --border: #233458;
+      --border-hi: #38bdf8;
+      --text-0: #f8fafc;
+      --text-1: #cbd5e1;
+      --text-2: #94a3b8;
+      --accent: #38bdf8;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --purple: #c084fc;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-0);
+      color: var(--text-0);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      overflow-x: hidden;
+      padding-bottom: 4rem;
+    }
+
+    /* Sticky Header & Unified Cascade State Bar */
+    header {
+      background: rgba(8, 13, 26, 0.92);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+    }
+
+    .header-top {
+      max-width: 1640px;
+      margin: 0 auto;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: radial-gradient(circle at 30% 30%, #38bdf8, #1d4ed8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+      flex-shrink: 0;
+    }
+
+    /* Cascade Synchronization Ribbon */
+    .cascade-bar {
+      background: linear-gradient(90deg, #091326 0%, #0f1f3d 50%, #091326 100%);
+      border-top: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 0.45rem 1.5rem;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+    }
+
+    .cascade-inner {
+      max-width: 1640px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--text-1);
+    }
+
+    .cascade-step {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .cascade-step:hover {
+      border-color: var(--accent);
+    }
+
+    .cascade-step strong {
+      color: var(--accent);
+    }
+
+    .cascade-arrow {
+      color: var(--amber);
+      font-weight: 700;
+    }
+
+    .container-main {
+      max-width: 1640px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .panel {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .section-title h2 {
+      font-size: 0.98rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-title .sub {
+      font-size: 0.78rem;
+      color: var(--text-2);
+    }
+
+    /* Interactive ITU Spectrum Tiles */
+    .spectrum-strip {
+      display: grid;
+      grid-template-columns: repeat(11, minmax(92px, 1fr));
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 0.4rem;
+    }
+
+    .band-tile {
+      border-radius: 10px;
+      padding: 0.7rem 0.55rem;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.18s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 124px;
+      user-select: none;
+    }
+
+    .band-tile:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+
+    .band-tile.active {
+      border-color: #ffffff;
+      box-shadow: 0 0 24px var(--tile-glow, rgba(56, 189, 248, 0.6));
+      transform: translateY(-4px);
+    }
+
+    .band-tile .itu-num {
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      opacity: 0.85;
+      text-transform: uppercase;
+    }
+
+    .band-tile .band-abbr {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0.1rem 0;
+    }
+
+    .band-tile .band-range {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      color: #fff;
+      background: rgba(0, 0, 0, 0.38);
+      padding: 0.12rem 0.35rem;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 0.2rem;
+    }
+
+    .band-tile .band-wave {
+      font-size: 0.63rem;
+      color: rgba(255, 255, 255, 0.85);
+      font-family: var(--font-mono);
+    }
+
+    .band-tile .bounce-badge {
+      margin-top: 0.3rem;
+      font-size: 0.6rem;
+      padding: 0.12rem 0.35rem;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.48);
+      font-weight: 600;
+      width: fit-content;
+    }
+
+    /* IEEE Radar Strip with Synchronized Highlight & Dimming */
+    .radar-strip-wrapper {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+    }
+
+    .radar-strip {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(105px, 1fr));
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+    }
+
+    .radar-pill {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .radar-pill.itu-linked {
+      border-color: rgba(245, 158, 11, 0.65);
+      background: rgba(245, 158, 11, 0.09);
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+    }
+
+    .radar-pill.itu-dimmed {
+      opacity: 0.42;
+    }
+
+    .radar-pill.itu-dimmed:hover {
+      opacity: 0.9;
+    }
+
+    .radar-pill.active {
+      border: 2px solid var(--amber);
+      background: rgba(245, 158, 11, 0.22);
+      opacity: 1 !important;
+      transform: translateY(-2px);
+      box-shadow: 0 0 18px rgba(245, 158, 11, 0.35);
+    }
+
+    .radar-pill .r-letter {
+      font-weight: 800;
+      color: var(--amber);
+      font-size: 0.92rem;
+      font-family: var(--font-mono);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .radar-pill .r-freq {
+      font-size: 0.67rem;
+      color: var(--text-0);
+      font-family: var(--font-mono);
+    }
+
+    .radar-pill .r-use {
+      font-size: 0.63rem;
+      color: var(--text-2);
+      margin-top: 0.15rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Layer 2 Grid */
+    .band-deep-dive {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 1150px) {
+      .band-deep-dive {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .band-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .meta-box {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem;
+    }
+
+    .meta-box .m-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-2);
+      margin-bottom: 0.2rem;
+    }
+
+    .meta-box .m-val {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-0);
+      font-family: var(--font-mono);
+    }
+
+    .meta-box .m-desc {
+      font-size: 0.77rem;
+      color: var(--text-1);
+      margin-top: 0.3rem;
+    }
+
+    /* Accordion Subbands */
+    .subband-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    details.subband-item {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      overflow: hidden;
+    }
+
+    details.subband-item[open] {
+      border-color: var(--accent);
+    }
+
+    details.subband-item summary {
+      padding: 0.65rem 0.9rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.84rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      list-style: none;
+      user-select: none;
+    }
+
+    details.subband-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .subband-freq {
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-size: 0.8rem;
+      margin-right: 0.6rem;
+    }
+
+    .subband-body {
+      padding: 0.75rem 0.9rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-1);
+      background: rgba(5, 8, 17, 0.55);
+    }
+
+    .tech-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.55rem;
+    }
+
+    .tech-tag {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      color: var(--text-0);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tech-tag:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    /* Propagation SVG */
+    .prop-visualizer {
+      background: #060a15;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .prop-svg {
+      width: 100%;
+      height: 210px;
+      display: block;
+    }
+
+    /* SigIDWiki Explorer & Controls */
+    .sigid-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-bottom: 1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 260px;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-0);
+      padding: 0.6rem 0.95rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .category-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 1rem;
+    }
+
+    .cat-btn {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      padding: 0.36rem 0.68rem;
+      border-radius: 7px;
+      font-size: 0.73rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font-mono);
+    }
+
+    .cat-btn:hover, .cat-btn.active {
+      background: var(--accent);
+      color: #030712;
+      border-color: var(--accent);
+    }
+
+    .sigid-workspace {
+      display: grid;
+      grid-template-columns: 1.32fr 1.05fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1180px) {
+      .sigid-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+      gap: 0.75rem;
+      max-height: 860px;
+      overflow-y: auto;
+      padding-right: 0.35rem;
+    }
+
+    .signal-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.55rem;
+    }
+
+    .signal-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .signal-card.selected {
+      border: 2px solid var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+    }
+
+    .sig-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.4rem;
+    }
+
+    .sig-name {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--text-0);
+    }
+
+    .sig-band-pill {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 0.12rem 0.42rem;
+      border-radius: 4px;
+      background: var(--bg-3);
+      color: var(--accent);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .sig-specs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      background: rgba(0, 0, 0, 0.32);
+      padding: 0.45rem;
+      border-radius: 6px;
+    }
+
+    .sig-specs div span {
+      color: var(--text-2);
+      display: block;
+      font-size: 0.6rem;
+    }
+
+    .sig-cats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.28rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sig-cat-tag {
+      font-size: 0.62rem;
+      padding: 0.08rem 0.38rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-1);
+    }
+
+    /* Waterfall & Signal Inspector */
+    .inspector-panel {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.15rem;
+      position: sticky;
+      top: 6.8rem;
+    }
+
+    .waterfall-box {
+      background: #02040a;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 0.9rem;
+    }
+
+    .waterfall-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      padding: 0.45rem 0.75rem;
+      background: #080d1a;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent);
+    }
+
+    .waterfall-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.45rem 0.75rem;
+      background: #070c18;
+      border-top: 1px solid var(--border);
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+    }
+
+    canvas#waterfallCanvas {
+      width: 100%;
+      height: 245px;
+      display: block;
+      cursor: crosshair;
+    }
+
+    .audio-btn {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--emerald);
+      color: #6ee7b7;
+      padding: 0.28rem 0.65rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .audio-btn.playing {
+      background: var(--rose);
+      border-color: var(--rose);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(244, 63, 94, 0.5);
+    }
+
+    .inspector-specs-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.65rem 0;
+      font-size: 0.78rem;
+    }
+
+    .inspector-specs-table th,
+    .inspector-specs-table td {
+      padding: 0.42rem 0.55rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .inspector-specs-table th {
+      color: var(--text-2);
+      font-weight: 500;
+      width: 34%;
+    }
+
+    .inspector-specs-table td {
+      font-family: var(--font-mono);
+      color: var(--text-0);
+    }
+
+    /* Tools Grid */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 1100px) {
+      .tools-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .calc-inputs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .calc-inputs input, .calc-inputs select {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-0);
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+    }
+
+    .calc-inputs input {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .calc-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 0.6rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .calc-box {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+    }
+
+    .calc-box .c-lbl {
+      font-size: 0.68rem;
+      color: var(--text-2);
+    }
+
+    .calc-box .c-val {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--emerald);
+      font-family: var(--font-mono);
+      margin-top: 0.15rem;
+    }
+
+    .mod-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+      gap: 0.55rem;
+    }
+
+    .mod-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .mod-card:hover {
+      border-color: var(--amber);
+      transform: translateY(-1px);
+    }
+
+    .mod-card .mod-title {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--amber);
+    }
+
+    .mod-card .mod-desc {
+      font-size: 0.71rem;
+      color: var(--text-1);
+      margin-top: 0.2rem;
+    }
+
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-0);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- STICKY HEADER + REAL-TIME CASCADE STATE TRACKER -->
+  <header>
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-icon">RF</div>
+        <div>
+          <h1 class="text-lg font-extrabold tracking-tight">Global RF Spectrum &amp; SigIDWiki Signal Identification Explorer</h1>
+          <p class="text-xs text-slate-400">Unified Top-to-Bottom Cascade: ITU Band → IEEE Radar Band → Atmospheric Bounce → SigIDWiki Waterfall → Antenna Size</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 text-xs font-mono">
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">ITU Bands: <strong class="text-sky-400">11</strong></span>
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">SigIDWiki Profiles: <strong class="text-emerald-400" id="totalSignalsStat">38</strong></span>
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">DSP Waterfall Modes: <strong class="text-amber-400">16 Authentic</strong></span>
+      </div>
+    </div>
+
+    <!-- LIVE CASCADE SYNC BAR -->
+    <div class="cascade-bar">
+      <div class="cascade-inner">
+        <span class="text-sky-400 font-bold uppercase tracking-wider mr-1">⚡ Active Cascade Sync:</span>
+        <span class="cascade-step" onclick="document.getElementById('section-spectrum').scrollIntoView({behavior:'smooth'})">
+          1. ITU Band: <strong id="syncItuLabel">HF (3–30 MHz)</strong>
+        </span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-step" onclick="document.getElementById('ieeeRadarStrip').scrollIntoView({behavior:'smooth'})">
+          2. IEEE Radar: <strong id="syncRadarLabel" style="color:var(--amber)">HF OTH Radar</strong>
+        </span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-step" onclick="document.getElementById('section-deepdive').scrollIntoView({behavior:'smooth'})">
+          3. Bounce: <strong id="syncBounceLabel" style="color:var(--emerald)">Multi-Hop F-Layer</strong>
+        </span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-step" onclick="document.getElementById('section-sigid').scrollIntoView({behavior:'smooth'})">
+          4. Active Signal: <strong id="syncSignalLabel">FT8 (14.074 MHz)</strong>
+        </span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-step" onclick="document.getElementById('section-calc').scrollIntoView({behavior:'smooth'})">
+          5. Antenna λ/2: <strong id="syncAntennaLabel" style="color:var(--purple)">10.12 m (33.2 ft)</strong>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container-main">
+
+    <!-- LAYER 1: INTERACTIVE SPECTRUM BAR (ITU + IEEE RADAR SYNCHRONIZED) -->
+    <section class="panel" id="section-spectrum">
+      <div class="section-title">
+        <h2>1. Interactive Electromagnetic RF Spectrum (Click Any ITU Band to Cascade Down Entire Page)</h2>
+        <span class="sub">Selecting an ITU Band synchronizes IEEE Radar Designations, Propagation SVG, SigIDWiki Signals, SDR Waterfall &amp; Antenna Calculator</span>
+      </div>
+
+      <div class="spectrum-strip" id="ituSpectrumStrip"></div>
+
+      <div class="radar-strip-wrapper">
+        <div class="section-title" style="margin-bottom: 0.5rem;">
+          <h2 style="color: var(--amber); font-size: 0.88rem;">IEEE Radar, Satellite &amp; Microwave Letter Designations (Auto-Linked to Active ITU Band • Click Any Pill to Filter)</h2>
+          <span class="sub">Highlighted pills overlap the selected ITU band; clicking any Radar pill cascades its frequency range down the page</span>
+        </div>
+        <div class="radar-strip" id="ieeeRadarStrip"></div>
+      </div>
+    </section>
+
+    <!-- LAYER 2: ACTIVE BAND DEEP-DIVE & ATMOSPHERIC BOUNCE VISUALIZER -->
+    <section class="band-deep-dive" id="section-deepdive">
+      <!-- Left: Detailed Band Physics, Antenna, Radar, Telecom & Expandable Sub-band Accordion -->
+      <div class="panel" id="bandDetailsPanel"></div>
+
+      <!-- Right: Live Atmospheric & Ionospheric Propagation Visualizer + Radar Details -->
+      <div class="panel">
+        <div class="section-title">
+          <h2>Atmospheric &amp; Ionospheric Bounce Visualizer</h2>
+          <span class="sub font-mono text-sky-400" id="propBandLabel">HF (3–30 MHz)</span>
+        </div>
+
+        <div class="prop-visualizer">
+          <svg class="prop-svg" id="propSvg" viewBox="0 0 600 210" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+
+        <div id="propExplanationBox" class="meta-box" style="margin-bottom: 0.9rem;"></div>
+
+        <div class="section-title" style="margin-top: 0.75rem; margin-bottom: 0.45rem;">
+          <h2 style="color: var(--amber); font-size: 0.88rem;">Synchronized IEEE Radar / Microwave Band Inspector</h2>
+        </div>
+        <div id="radarInspectorBox" class="meta-box">
+          <div class="m-label" id="radarSubLabel">Overlapping IEEE Designation</div>
+          <div class="m-val" id="radarTitle" style="color: var(--amber);">HF Radar Band (3 – 30 MHz)</div>
+          <div class="m-desc" id="radarDesc"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAYER 3: SIGIDWIKI SIGNAL IDENTIFICATION EXPLORER & LIVE SDR WATERFALL -->
+    <section class="panel" id="section-sigid">
+      <div class="section-title">
+        <h2>2. SigIDWiki Signal Identification Guide &amp; Multi-Algorithm DSP Waterfall</h2>
+        <span class="sub">Synchronized with Top Band Selection • Click any signal card to run its mathematical DSP waterfall, audio synth &amp; exact antenna calculation</span>
+      </div>
+
+      <div class="sigid-controls">
+        <div class="search-box">
+          <input type="text" id="signalSearchInput" placeholder="Search signals by name (FT8, UVB-76, Link 16, TETRA, NOAA APT, LoRa, OTH), frequency (1090 MHz, 4625 kHz), modulation..." />
+          <button class="cat-btn" onclick="resetSignalFilters()">Show All Signals</button>
+        </div>
+        <div class="text-xs font-mono text-slate-400" id="showingCountLabel">Showing signals</div>
+      </div>
+
+      <div class="category-bar" id="categoryFilterBar"></div>
+
+      <div class="sigid-workspace">
+        <!-- Left: Filterable Grid of Signals -->
+        <div class="signal-grid" id="signalGrid"></div>
+
+        <!-- Right: Sticky Signal Inspector + Live SDR Waterfall -->
+        <div class="inspector-panel" id="signalInspector">
+          <div class="waterfall-box">
+            <div class="waterfall-header">
+              <div>
+                <span id="wfSignalTitle" class="font-bold text-sky-400">SDR WATERFALL</span>
+                <span id="wfEngineBadge" class="ml-2 px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 text-[10px]">DSP: ft8_wsjtx</span>
+              </div>
+              <button id="audioToggleBtn" class="audio-btn" onclick="toggleSignalAudio()">
+                <span id="audioIcon">🔊</span> <span id="audioBtnText">Synthesize Audio</span>
+              </button>
+            </div>
+
+            <canvas id="waterfallCanvas" width="560" height="245"></canvas>
+
+            <div class="waterfall-controls">
+              <label class="flex items-center gap-1.5">
+                <span class="text-slate-400">Zoom:</span>
+                <input type="range" id="wfZoomSlider" min="0.5" max="2.5" step="0.1" value="1.0" class="w-20 accent-sky-400" />
+              </label>
+              <label class="flex items-center gap-1.5">
+                <span class="text-slate-400">Gain:</span>
+                <input type="range" id="wfGainSlider" min="0.6" max="1.8" step="0.05" value="1.1" class="w-20 accent-sky-400" />
+              </label>
+              <label class="flex items-center gap-1.5">
+                <span class="text-slate-400">Palette:</span>
+                <select id="wfPaletteSelect" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-slate-200">
+                  <option value="sdrsharp">SDR# Turbo Blue</option>
+                  <option value="artemis">SigIDWiki / Artemis Plasma</option>
+                  <option value="phosphor">Green Phosphor Radar</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div id="inspectorDetails"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAYER 4: CASCADING RF WAVELENGTH / ANTENNA SCALE VISUALIZER & MODULATION ENCYCLOPEDIA -->
+    <section class="tools-grid" id="section-calc">
+      <!-- Left: Cascading Antenna Length Calculator + Visual Scale Comparison SVG -->
+      <div class="panel">
+        <div class="section-title">
+          <h2>3. Synchronized Antenna Size, Wavelength &amp; Skin-Depth Calculator</h2>
+          <span class="sub" id="calcSyncSourceLabel">Auto-synced to selected signal</span>
+        </div>
+
+        <div class="calc-inputs">
+          <input type="number" id="calcFreqInput" value="14.074" step="any" min="0.000001" />
+          <select id="calcUnitSelect">
+            <option value="1">Hz</option>
+            <option value="1000">kHz</option>
+            <option value="1000000" selected>MHz</option>
+            <option value="1000000000">GHz</option>
+          </select>
+          <button class="cat-btn" onclick="syncBandFromCalculator()">Jump Spectrum to This Freq ↑</button>
+        </div>
+
+        <div class="calc-results" id="calcResultsGrid"></div>
+
+        <!-- Visual Physical Antenna Scale Comparison SVG -->
+        <div class="prop-visualizer" style="margin-bottom: 0;">
+          <div class="flex justify-between items-center text-xs font-mono text-slate-400 mb-1.5">
+            <span>PHYSICAL ANTENNA SIZE VS REAL-WORLD SCALE REFERENCE</span>
+            <span id="antennaScaleComparisonText" class="text-emerald-400 font-bold">Compared to 2-Story House / Human</span>
+          </div>
+          <svg id="antennaScaleSvg" viewBox="0 0 580 145" class="w-full h-[145px] block"></svg>
+        </div>
+      </div>
+
+      <!-- Right: Clickable Modulation & Transmission Mode Reference Guide -->
+      <div class="panel">
+        <div class="section-title">
+          <h2>4. Global RF Modulation &amp; Transmission Modes (Click Any to Filter Signals)</h2>
+          <span class="sub">How information is encoded onto carrier waves in SigIDWiki</span>
+        </div>
+        <div class="mod-grid" id="modulationGrid"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    /***************************************************************************
+     * 1. ITU FREQUENCY SPECTRUM DATASET (11 BANDS: ELF -> THF)
+     ***************************************************************************/
+    const ITU_BANDS = [
+      {
+        id: "ELF",
+        ituNum: "ITU Band 1–2",
+        name: "Extremely Low Frequency",
+        range: "3 – 300 Hz",
+        defaultFreqHz: 82,
+        flagshipSignal: "ZEVS Russian Submarine Transmitter",
+        linkedRadarLetters: [],
+        wavelength: "100,000 km – 1,000 km",
+        color: "linear-gradient(135deg, #311042, #581c87)",
+        glow: "rgba(168, 85, 247, 0.55)",
+        bounceShort: "Earth-Ionosphere Waveguide",
+        canBounce: "YES (Planetary Spherical Cavity Waveguide)",
+        bounceType: "waveguide",
+        propagation: "Propagates inside the spherical Earth-Ionosphere cavity waveguide with extraordinarily low attenuation (~1–2 dB per 1,000 km). Penetrates hundreds of meters into conductive seawater and solid granite bedrock.",
+        antennaInfo: "Resonant half-wave dipoles are physically impossible (thousands of km long). Requires 20–60 km grounded horizontal wire loops drilled deep into high-resistivity granite crust using Earth's mantle as the return loop.",
+        radarUse: "None (wavelength is thousands of km, providing zero spatial target resolution). Used instead for Schumann resonance global lightning and magnetospheric monitoring.",
+        telecomUse: "One-way ultra-deep strategic submarine action-message broadcasts (US Project Sanguine/ELF at 76 Hz, Russian ZEVS at 82 Hz, Indian INS Kattabomman). Data rate is a few characters per minute.",
+        subbands: [
+          {
+            freq: "7.83 / 14.3 / 20.8 Hz",
+            title: "Schumann Planetary Cavity Resonances",
+            desc: "Global electromagnetic standing waves excited by ~50 lightning flashes per second worldwide inside the Earth-ionosphere waveguide.",
+            tech: ["ZEVS Russian Submarine Transmitter"]
+          },
+          {
+            freq: "50 Hz / 60 Hz",
+            title: "AC Utility Power Grid Fundamental Hum",
+            desc: "Continental alternating-current power transmission grids; tracked in audio forensics via Electrical Network Frequency (ENF) analysis.",
+            tech: ["AC Power Grid Hum (50/60 Hz)"]
+          },
+          {
+            freq: "76 Hz & 82 Hz",
+            title: "Strategic Deep-Submerged Submarine Broadcasts (ZEVS / Sanguine)",
+            desc: "Penetrates 300+ meters of ocean water to reach ballistic missile submarines at operational depth.",
+            tech: ["ZEVS Russian Submarine Transmitter"]
+          }
+        ]
+      },
+      {
+        id: "ULF",
+        ituNum: "ITU Band 3",
+        name: "Ultra Low Frequency",
+        range: "300 – 3,000 Hz",
+        defaultFreqHz: 1200,
+        flagshipSignal: "Through-The-Earth (TTE) Mine Rescue Comms",
+        linkedRadarLetters: [],
+        wavelength: "1,000 km – 100 km",
+        color: "linear-gradient(135deg, #3b0764, #6d28d9)",
+        glow: "rgba(139, 92, 246, 0.55)",
+        bounceShort: "Waveguide + Subterranean Rock",
+        canBounce: "YES (Ionospheric Cavity + Solid Rock Penetration)",
+        bounceType: "waveguide",
+        propagation: "Strong Earth-ionosphere waveguide propagation combined with deep magnetic skin-depth penetration through hundreds of meters of solid rock, soil, and coal seams.",
+        antennaInfo: "Large multi-turn copper induction loop antennas (2m–50m diameter) or grounded earth-current electrodes driven 500m–2km apart into the soil.",
+        radarUse: "Magnetotelluric subsurface conductivity sounding (geophysical mineral and hydrocarbon prospecting).",
+        telecomUse: "Through-The-Earth (TTE) emergency mine rescue communications, Measurement-While-Drilling (MWD) oilfield telemetry, and natural magnetospheric 'Whistler' and 'Dawn Chorus' waves.",
+        subbands: [
+          {
+            freq: "300 Hz – 3,000 Hz",
+            title: "Through-The-Earth (TTE) Subterranean Mine Rescue & Subsurface Telemetry",
+            desc: "Travels straight through solid rock strata after tunnel collapses when coaxial leaky-feeder cables are severed.",
+            tech: ["Through-The-Earth (TTE) Mine Rescue Comms"]
+          },
+          {
+            freq: "500 Hz – 3,000 Hz",
+            title: "Magnetospheric Lightning Whistlers & Dawn Chorus",
+            desc: "Audio-frequency electromagnetic impulses from lightning dispersed along geomagnetic field lines into descending musical tones.",
+            tech: ["Atmospheric Whistlers & Dawn Chorus"]
+          }
+        ]
+      },
+      {
+        id: "VLF",
+        ituNum: "ITU Band 4",
+        name: "Very Low Frequency",
+        range: "3 – 30 kHz",
+        defaultFreqHz: 24000,
+        flagshipSignal: "US / NATO Submarine Fleet Broadcast (NAA / NWC)",
+        linkedRadarLetters: [],
+        wavelength: "100 km – 10 km",
+        color: "linear-gradient(135deg, #1e1b4b, #4338ca)",
+        glow: "rgba(99, 102, 241, 0.55)",
+        bounceShort: "D-Layer Waveguide Bounce",
+        canBounce: "YES (Sharp D-Layer 60–90 km Waveguide Bounce)",
+        bounceType: "vlf_duct",
+        propagation: "Reflects cleanly off the lowest ionospheric D-layer (day) and E-layer (night) and the ocean surface, forming a low-loss planetary waveguide (~2 dB/1,000 km loss). Penetrates seawater down to ~20–40 meters.",
+        antennaInfo: "Immense top-loaded umbrella monopoles and Trideco tower arrays (250m–389m tall, e.g., Cutler Maine, NWC Exmouth Australia) over 200+ km of buried copper ground radials.",
+        radarUse: "Used for Sudden Ionospheric Disturbance (SID) solar X-ray flare detection by monitoring VLF skywave phase stability.",
+        telecomUse: "Global naval submarine broadcasts (200-baud MSK), Russian Alpha (RSDN-20) hyperbolic radionavigation, and standard frequency/time broadcasts.",
+        subbands: [
+          {
+            freq: "11.905 – 14.881 kHz",
+            title: "RSDN-20 (Alpha) Long-Range Hyperbolic Navigation",
+            desc: "Russian phase-comparison radionavigation network for aircraft and submarines across Eurasia and the Arctic.",
+            tech: ["RSDN-20 (Alpha) Russian Navigation"]
+          },
+          {
+            freq: "16.0 – 28.5 kHz",
+            title: "Megawatt Naval Submarine Fleet Broadcast Transmitters",
+            desc: "Continuous 200-baud MSK encrypted fleet broadcasts reaching submerged submarines globally.",
+            tech: ["US / NATO Submarine Fleet Broadcast (NAA / NWC)"]
+          }
+        ]
+      },
+      {
+        id: "LF",
+        ituNum: "ITU Band 5",
+        name: "Low Frequency (Longwave)",
+        range: "30 – 300 kHz",
+        defaultFreqHz: 60000,
+        flagshipSignal: "WWVB / DCF77 / JJY Atomic Time Signals",
+        linkedRadarLetters: [],
+        wavelength: "10 km – 1 km",
+        color: "linear-gradient(135deg, #172554, #1d4ed8)",
+        glow: "rgba(59, 130, 246, 0.55)",
+        bounceShort: "Groundwave + Night Skywave",
+        canBounce: "PARTIAL (Strong Surface Groundwave + Night E-Layer Bounce)",
+        bounceType: "ground_and_sky",
+        propagation: "Dominated by stable diffraction groundwave hugging Earth's curvature up to 1,500+ km. At night, reduced D-layer absorption allows skywave reflection up to 3,000 km.",
+        antennaInfo: "Electrically short vertical mast radiators (150m–350m tall) with top-loading capacitance hats; receivers use compact ferrite rod loopsticks (6–12 cm).",
+        radarUse: "None (used for precision microsecond time-of-arrival hyperbolic navigation).",
+        telecomUse: "National Atomic Clock Time Stations (WWVB 60 kHz, DCF77 77.5 kHz), eLORAN/LORAN-C (100 kHz), 125 kHz RFID, Aviation NDBs, and Longwave AM Broadcasting (153–279 kHz).",
+        subbands: [
+          {
+            freq: "40 / 60 / 68.5 / 77.5 kHz",
+            title: "National Atomic Clock Time & Frequency Standards",
+            desc: "Synchronizes radio-controlled clocks, wristwatches, telecom oscillators, and power grids across continents.",
+            tech: ["WWVB / DCF77 / JJY Atomic Time Signals"]
+          },
+          {
+            freq: "100 kHz",
+            title: "eLORAN & LORAN-C Terrestrial Hyperbolic Radionavigation",
+            desc: "High-power pulsed terrestrial navigation providing a jam-resistant sovereign backup to satellite GPS.",
+            tech: ["eLORAN / LORAN-C Terrestrial Navigation"]
+          },
+          {
+            freq: "125 – 134.2 kHz",
+            title: "Low-Frequency Inductive RFID, Pet Microchips & Immobilizers",
+            desc: "Short-range magnetic coupling for building access cards (EM4100), ISO 11784 pet/livestock tags, and car keys.",
+            tech: ["125 kHz LF RFID & Animal Transponder"]
+          },
+          {
+            freq: "153 – 285 kHz",
+            title: "Longwave AM Broadcasting, DGPS & Aeronautical NDBs",
+            desc: "Continental AM radio in Europe/North Africa and Morse-ident Non-Directional Beacons for aviation/marine.",
+            tech: ["Aviation Non-Directional Beacon (NDB)"]
+          }
+        ]
+      },
+      {
+        id: "MF",
+        ituNum: "ITU Band 6",
+        name: "Medium Frequency (Mediumwave)",
+        range: "300 kHz – 3 MHz",
+        defaultFreqHz: 518000,
+        flagshipSignal: "NAVTEX Maritime Weather & Safety Broadcast",
+        linkedRadarLetters: [],
+        wavelength: "1 km – 100 m",
+        color: "linear-gradient(135deg, #0f3f5c, #0284c7)",
+        glow: "rgba(14, 165, 233, 0.55)",
+        bounceShort: "Day Groundwave / Night Skywave",
+        canBounce: "YES AT NIGHT (Day D-Layer Absorbs; Night E/F Skywave Bounce)",
+        bounceType: "mf_day_night",
+        propagation: "Daytime: Solar-ionized D-layer absorbs skywaves, limiting range to surface groundwave (80–400 km). Nighttime: D-layer recombines after sunset, allowing E/F layer skywave bounce over 1,000–3,000 km.",
+        antennaInfo: "Quarter-wave vertical tower radiators (50m–200m tall) over copper radials; receivers use ferrite loopsticks or long Beverage wires.",
+        radarUse: "Mesospheric wind-profiler radars studying upper-atmosphere winds at 60–100 km altitude.",
+        telecomUse: "Global AM Mediumwave Broadcast Band (530–1710 kHz), NAVTEX maritime teletype (490/518 kHz), Aviation NDBs, 160m Amateur 'Top Band', and 2182 kHz Marine Distress.",
+        subbands: [
+          {
+            freq: "490 kHz & 518 kHz",
+            title: "NAVTEX International Maritime GMDSS Safety Teletype",
+            desc: "Automated 100-baud SITOR-B FSK broadcasts of gale warnings, navigational hazards, and SAR alerts to ships.",
+            tech: ["NAVTEX Maritime Weather & Safety Broadcast"]
+          },
+          {
+            freq: "530 – 1,710 kHz",
+            title: "Global AM Mediumwave Broadcast Band (Analog & HD/DRM)",
+            desc: "Regional daytime and continental nighttime broadcasting using AM, IBOC HD Radio, and DRM30.",
+            tech: ["AM Mediumwave & Shortwave Broadcast"]
+          },
+          {
+            freq: "1,800 – 2,000 kHz",
+            title: "160-Meter Amateur Radio 'Top Band' & Marine SSB",
+            desc: "Nighttime transoceanic CW Morse, SSB voice, and weak-signal FT8 digital operation.",
+            tech: ["CW (Continuous Wave Morse Code)", "SSB (Single Sideband Voice - USB/LSB)"]
+          }
+        ]
+      },
+      {
+        id: "HF",
+        ituNum: "ITU Band 7",
+        name: "High Frequency (Shortwave)",
+        range: "3 – 30 MHz",
+        defaultFreqHz: 14074000,
+        flagshipSignal: "FT8 Weak-Signal Amateur Digital Mode",
+        linkedRadarLetters: ["HF"],
+        wavelength: "100 m – 10 m",
+        color: "linear-gradient(135deg, #064e3b, #10b981)",
+        glow: "rgba(16, 185, 129, 0.6)",
+        bounceShort: "Multi-Hop Ionospheric F-Layer",
+        canBounce: "YES — PRIMARY GLOBAL SKYWAVE BOUNCE BAND",
+        bounceType: "hf_multihop",
+        propagation: "Refracts and bounces repeatedly between the Ionosphere (E, F1, F2 layers at 100–400 km altitude) and Earth's surface, enabling worldwide communication without satellites!",
+        antennaInfo: "Resonant half-wave dipoles (5m to 50m long), Yagi-Uda beams, Log-Periodic arrays, NVIS whips, and huge 1–3 km phased curtain arrays for OTH radar.",
+        radarUse: "Over-The-Horizon (OTH) Skywave & Coastal Surface-Wave Radars (JORN Australia, 29B6 Kontayner Russia, ROTHR, CODAR SeaSonde) tracking aircraft and ships 1,000–3,500 km away!",
+        telecomUse: "Shortwave Broadcasting, Oceanic Aviation (HFDL/USB), Military ALE & STANAG 4285/4539, Numbers Stations (UVB-76, HM01), Amateur Radio (80m–10m: FT8, SSTV, RTTY, CW), CB Radio (27 MHz), and 13.56 MHz NFC.",
+        subbands: [
+          {
+            freq: "3.0 – 26.1 MHz (Broadcast & Numbers)",
+            title: "International Shortwave Broadcast, DRM & Intelligence Numbers Stations",
+            desc: "Global voice broadcasts and enigmatic military/intelligence transmissions like UVB-76 ('The Buzzer') and Cuban HM01.",
+            tech: ["UVB-76 ('The Buzzer' / ZhUOZ)", "HM01 Cuban Hybrid Numbers Station", "DRM (Digital Radio Mondiale)", "AM Mediumwave & Shortwave Broadcast"]
+          },
+          {
+            freq: "3.5 – 29.7 MHz (Amateur Radio)",
+            title: "Global Amateur Radio Weak-Signal, Image & Keyboard Modes",
+            desc: "Worldwide ionospheric DX using FT8, WSPR, Slow-Scan TV (SSTV), RTTY Baudot, CW Morse, and SSB voice.",
+            tech: ["FT8 Weak-Signal Amateur Digital Mode", "WSPR (Weak Signal Propagation Reporter)", "SSTV (Slow-Scan Television - Martin/Scottie)", "RTTY (Radio Teletype - Baudot FSK)", "CW (Continuous Wave Morse Code)", "SSB (Single Sideband Voice - USB/LSB)"]
+          },
+          {
+            freq: "2.8 – 24.0 MHz (Aero & Military)",
+            title: "Transoceanic Aviation (HFDL) & Military ALE / STANAG Modems",
+            desc: "Commercial airliners over oceans report positions via HFDL; militaries maintain satellite-independent links via 2G/3G ALE and STANAG 4285.",
+            tech: ["HFDL (High Frequency Data Link - ARINC 635)", "2G / 3G Automatic Link Establishment (ALE)", "STANAG 4285 / 4539 NATO HF Modem"]
+          },
+          {
+            freq: "4.5 – 29.0 MHz (OTH Radar)",
+            title: "Over-The-Horizon (OTH) Skywave Radar & CODAR Ocean Current Radar",
+            desc: "Bouncing wideband FMCW chirps off the F-layer to track stealth aircraft and warships thousands of km beyond the horizon.",
+            tech: ["Over-The-Horizon (OTH) Skywave Radar", "CODAR SeaSonde Oceanographic Radar"]
+          },
+          {
+            freq: "13.56 MHz & 27.12 MHz",
+            title: "ISM Band (NFC Contactless Payments) & 27 MHz Citizen's Band (CB)",
+            desc: "13.56 MHz powers contactless credit cards and biometric passports; 27 MHz provides 40-channel voice radio.",
+            tech: ["13.56 MHz NFC & Contactless Smartcards"]
+          }
+        ]
+      },
+      {
+        id: "VHF",
+        ituNum: "ITU Band 8",
+        name: "Very High Frequency",
+        range: "30 – 300 MHz",
+        defaultFreqHz: 137100000,
+        flagshipSignal: "NOAA APT & Meteor-M LRPT Weather Satellites",
+        linkedRadarLetters: ["VHF"],
+        wavelength: "10 m – 1 m",
+        color: "linear-gradient(135deg, #3f6212, #84cc16)",
+        glow: "rgba(132, 204, 22, 0.55)",
+        bounceShort: "Line-of-Sight + Sporadic-E",
+        canBounce: "RARE (Normally pierces Ionosphere; Sporadic-E, Meteor Scatter & Tropospheric Ducting below 150 MHz)",
+        bounceType: "los_sporadic",
+        propagation: "Primarily Line-of-Sight (LOS) to the radio horizon (~4/3 optical horizon). Between 30–110 MHz, summer 'Sporadic-E' ionization clouds and meteor trails can bounce signals 800–2,200 km!",
+        antennaInfo: "Practical quarter-wave whips (0.25m to 2.5m), aircraft blade antennas, Quadrifilar Helix (QFH) satellite antennas, discones, and Yagi-Uda arrays.",
+        radarUse: "Counter-Stealth VHF Early Warning Radars (Nebo-SVU, JY-27) whose 1–3m wavelengths cause resonant scattering on fighter airframes; Stratospheric Wind Profilers.",
+        telecomUse: "FM Stereo + RDS Broadcast (88–108 MHz), DAB+ Digital Radio, Civil Airband AM & ACARS/VDL2 (108–137 MHz), NOAA Weather Satellites (137 MHz), Marine VHF & AIS, POCSAG Pagers, and P25 Public Safety.",
+        subbands: [
+          {
+            freq: "87.5 – 108.0 MHz",
+            title: "Worldwide FM Stereo Broadcast + 57 kHz RDS Subcarrier",
+            desc: "Wideband FM analog audio with 19 kHz stereo pilot, 38 kHz stereo difference, and 57 kHz digital RDS station/traffic data.",
+            tech: ["FM Broadcast Stereo + RDS (Radio Data System)"]
+          },
+          {
+            freq: "108.0 – 136.975 MHz",
+            title: "Civil Aviation Navigation (VOR/ILS), Airband AM Voice, ACARS & VDL2",
+            desc: "Global air traffic control voice and automated cockpit telemetry/CPDLC data links.",
+            tech: ["VOR (VHF Omnidirectional Range) Aviation Navigation", "VHF Airband Voice & ACARS", "VDL Mode 2 (VHF Digital Link - Aviation CPDLC)"]
+          },
+          {
+            freq: "137.0 – 138.0 MHz",
+            title: "Polar Orbiting Weather Satellites (NOAA APT & Meteor-M LRPT)",
+            desc: "Direct live cloud imagery downlinks from 850 km LEO satellites receivable with a simple V-dipole or QFH antenna.",
+            tech: ["NOAA APT & Meteor-M LRPT Weather Satellites"]
+          },
+          {
+            freq: "144.0 – 174.0 MHz",
+            title: "2m Amateur Band (APRS), Public Safety P25, POCSAG Pagers & Marine AIS",
+            desc: "Core band for vessel tracking (AIS), amateur packet telemetry (APRS), hospital pagers, and emergency dispatch.",
+            tech: ["AIS (Automatic Identification System - Maritime)", "APRS (Automatic Packet Reporting System)", "POCSAG / FLEX Alphanumeric Pager Broadcast", "APCO Project 25 (P25 Phase 1 & Phase 2)"]
+          },
+          {
+            freq: "174.0 – 240.0 MHz",
+            title: "DAB / DAB+ Digital Audio Broadcasting & VHF Digital TV",
+            desc: "1.536 MHz wide COFDM digital radio multiplexes across Europe, UK, and Australia.",
+            tech: ["DAB / DAB+ (Digital Audio Broadcasting)"]
+          }
+        ]
+      },
+      {
+        id: "UHF",
+        ituNum: "ITU Band 9",
+        name: "Ultra High Frequency",
+        range: "300 MHz – 3 GHz",
+        defaultFreqHz: 1090000000,
+        flagshipSignal: "ADS-B & Mode-S Aviation Transponder (1090 MHz)",
+        linkedRadarLetters: ["UHF", "L-Band", "S-Band"],
+        wavelength: "1 m – 10 cm",
+        color: "linear-gradient(135deg, #78350f, #f59e0b)",
+        glow: "rgba(245, 158, 11, 0.6)",
+        bounceShort: "Line-of-Sight / Pierces Space",
+        canBounce: "NO IONOSPHERIC BOUNCE (Penetrates straight into space for Satellites & EME Moonbounce; strong indoor multipath)",
+        bounceType: "space_los",
+        propagation: "Strict Line-of-Sight (LOS) with strong building penetration at 400–900 MHz and low atmospheric loss, making it the 'Goldilocks' spectrum for cellular 4G/5G, GPS, aviation transponders, and L-band satellites.",
+        antennaInfo: "Compact stubby whips (6–25 cm), smartphone internal PIFA antennas, ceramic RHCP GPS patches, collinear arrays, and parabolic dishes.",
+        radarUse: "UHF Ballistic Missile Early Warning Phased Arrays (PAVE PAWS 420–450 MHz), L-Band Long-Range Air Route Surveillance (ARSR-4), and S-Band Terminal Airport & Weather Radars.",
+        telecomUse: "TETRA/DMR/P25 Trunked Radio, 406 MHz EPIRB, LoRaWAN/Meshtastic (433/868/915 MHz), 4G LTE & 5G NR, ADS-B (1090 MHz), Link 16, GPS/Galileo/GLONASS, Inmarsat/Iridium, Bluetooth, and 2.4 GHz Wi-Fi.",
+        subbands: [
+          {
+            freq: "380 – 470 MHz",
+            title: "TETRA & DMR Trunked Radio, 406 MHz Cospas-Sarsat EPIRB & Weather Radiosondes",
+            desc: "Emergency services trunked networks, stratospheric weather balloons (RS41), and satellite search-and-rescue distress beacons.",
+            tech: ["TETRA (Terrestrial Trunked Radio)", "DMR (Digital Mobile Radio - Tier II / III)", "Vaisala RS41 Weather Balloon Radiosonde", "Cospas-Sarsat EPIRB / ELT / PLB Distress Beacon"]
+          },
+          {
+            freq: "433 / 868 / 915 MHz (ISM)",
+            title: "LoRaWAN, Meshtastic Off-Grid Chirp Mesh & Smart Utility Meters",
+            desc: "Chirp Spread Spectrum (CSS) enabling 10–150 km low-power links decoding 20 dB below thermal noise.",
+            tech: ["LoRa / LoRaWAN & Meshtastic Off-Grid Mesh"]
+          },
+          {
+            freq: "470 – 960 MHz",
+            title: "Digital Terrestrial TV (DVB-T2 / ATSC 3.0), GSM & Low-Band 4G/5G Cellular",
+            desc: "Wideband COFDM television broadcasting and wide-area cellular coverage.",
+            tech: ["DVB-T2 / ATSC 3.0 Digital Terrestrial Television", "GSM (2G Global System for Mobile Communications)", "4G LTE & 5G NR (New Radio) Cellular Downlink"]
+          },
+          {
+            freq: "960 – 1,215 MHz (Aeronautical L-Band)",
+            title: "1090 MHz ADS-B / Mode-S Aircraft Transponders, DME & Military Link 16",
+            desc: "Real-time aircraft GPS position squitters on 1090 MHz and NATO fast-frequency-hopping tactical data links.",
+            tech: ["ADS-B & Mode-S Aviation Transponder (1090 MHz)", "NATO Link 16 (JTIDS / MIDS Tactical Data Link)"]
+          },
+          {
+            freq: "1,164 – 2,483.5 MHz (GNSS, Satcom & 2.4 GHz ISM)",
+            title: "GPS/Galileo/GLONASS, Inmarsat/Iridium, HRPT Weather Satellites & Bluetooth",
+            desc: "Global satellite navigation, L-band satellite phones, and 2.4 GHz FHSS/OFDM consumer wireless.",
+            tech: ["GPS L1 C/A & Galileo E1 / GLONASS Navigation", "Inmarsat-C / Aero & Iridium Satellite Downlinks", "NOAA / MetOp / FengYun HRPT Weather Satellite", "Bluetooth / BLE (Bluetooth Low Energy)"]
+          }
+        ]
+      },
+      {
+        id: "SHF",
+        ituNum: "ITU Band 10",
+        name: "Super High Frequency (Centimeter Wave)",
+        range: "3 – 30 GHz",
+        defaultFreqHz: 9410000000,
+        flagshipSignal: "Marine X-Band Navigation Radar (9.4 GHz)",
+        linkedRadarLetters: ["S-Band", "C-Band", "X-Band", "Ku-Band", "K / Ka"],
+        wavelength: "10 cm – 1 cm",
+        color: "linear-gradient(135deg, #7f1d1d, #ef4444)",
+        glow: "rgba(239, 68, 68, 0.6)",
+        bounceShort: "Strict LOS / Rain Fade >10 GHz",
+        canBounce: "NO (Pierces Ionosphere cleanly; suffers Rain Attenuation above 10 GHz and H₂O peak at 22.2 GHz)",
+        bounceType: "space_los",
+        propagation: "Focused Line-of-Sight microwave beams. Passes cleanly into space for high-throughput satellite links, though heavy rain scatters wavelengths above 10 GHz (Ku/Ka 'rain fade').",
+        antennaInfo: "Parabolic dishes (30 cm to 30 m), slotted waveguide marine radar bars, horn feeds, and electronically steered phased arrays (Starlink Dishy, Fighter AESA).",
+        radarUse: "Primary home of precision radars: S/C-Band Doppler Weather Radar (NEXRAD), X-Band Fighter AESA & Marine Navigation Radar (9.4 GHz), Ku/Ka Airport Surface & Counter-Drone Radar.",
+        telecomUse: "5G NR C-Band (3.5 GHz), Wi-Fi 5/6/6E/7 (5 & 6 GHz), Ultra-Wideband (UWB 6.5/8 GHz), Starlink/OneWeb LEO Downlinks (10.7–12.7 GHz), DVB-S2X Satellite TV, and Microwave Backhaul.",
+        subbands: [
+          {
+            freq: "2.7 – 4.2 GHz (S & C Band)",
+            title: "NEXRAD Doppler Weather Radar, 5G C-Band Massive MIMO & C-Band Satcom",
+            desc: "High-power meteorological radar and gigabit 5G mid-band cellular deployments.",
+            tech: ["S-Band Doppler Weather Radar (NEXRAD WSR-88D)", "4G LTE & 5G NR (New Radio) Cellular Downlink"]
+          },
+          {
+            freq: "5.15 – 8.5 GHz",
+            title: "Wi-Fi 5 / 6 / 6E / 7 (OFDMA) & Ultra-Wideband (UWB) Impulse Ranging",
+            desc: "160/320 MHz wide local wireless channels and 500 MHz wide 2-nanosecond UWB time-of-flight pulses (Apple AirTag).",
+            tech: ["Wi-Fi 4 / 5 / 6 / 6E / 7 (IEEE 802.11 OFDM)", "Ultra-Wideband (UWB - IEEE 802.15.4z / AirTag)"]
+          },
+          {
+            freq: "8.0 – 12.0 GHz (X-Band)",
+            title: "Marine X-Band Radar (9.4 GHz), Fighter AESA Fire-Control & Deep Space",
+            desc: "Every commercial vessel uses a 9.4 GHz rotating slotted-waveguide radar for navigation and collision avoidance.",
+            tech: ["Marine X-Band Navigation Radar (9.4 GHz)"]
+          },
+          {
+            freq: "10.7 – 30.0 GHz (Ku / K / Ka Bands)",
+            title: "Starlink LEO Phased-Array Broadband & DVB-S2X Geostationary TV",
+            desc: "Multi-hundred-megahertz satellite downlinks powering homes, aircraft, and ships worldwide.",
+            tech: ["Starlink LEO Broadband & DVB-S2X Ku-Band Downlink"]
+          }
+        ]
+      },
+      {
+        id: "EHF",
+        ituNum: "ITU Band 11",
+        name: "Extremely High Frequency (Millimeter Wave)",
+        range: "30 – 300 GHz",
+        defaultFreqHz: 77000000000,
+        flagshipSignal: "77–81 GHz Automotive ADAS & Autonomous FMCW Radar",
+        linkedRadarLetters: ["K / Ka", "V / W"],
+        wavelength: "10 mm – 1 mm",
+        color: "linear-gradient(135deg, #831843, #ec4899)",
+        glow: "rgba(236, 72, 153, 0.6)",
+        bounceShort: "Short LOS / O₂ & H₂O Absorption",
+        canBounce: "NO (Blocked by walls, foliage, and heavy rain; sharp resonant absorption at 60 GHz O₂ & 183 GHz H₂O)",
+        bounceType: "mmwave_los",
+        propagation: "Quasi-optical pencil beams. High free-space path loss and molecular absorption at 60 GHz (Oxygen, ~15 dB/km) and 183 GHz (Water Vapor). Atmospheric windows at 35, 77, 94, and 140 GHz allow high-resolution radar.",
+        antennaInfo: "Fingernail-sized Antenna-in-Package (AiP) silicon phased arrays (e.g., 1.9 mm half-wave patch elements at 77 GHz) and precision Cassegrain dishes.",
+        radarUse: "77–81 GHz Automotive ADAS & Autonomous Driving FMCW Radar, 94 GHz W-Band Cloud Profiling Radar, Airport Millimeter-Wave Security Scanners, and Ka-Band Police Radar (34.7 GHz).",
+        telecomUse: "5G NR FR2 mmWave (28/39 GHz), 60 GHz 802.11ad/ay WiGig, 71–86 GHz E-Band 40 Gbps Point-to-Point Fiber Replacement, and MILSTAR/AEHF Satcom.",
+        subbands: [
+          {
+            freq: "57 – 71 GHz (V-Band Oxygen Peak)",
+            title: "60 GHz WiGig (802.11ad/ay) & Secure Inter-Satellite Crosslinks",
+            desc: "Atmospheric oxygen absorbs 60 GHz signals over a few kilometers, preventing ground interception of satellite crosslinks.",
+            tech: ["60 GHz WiGig (IEEE 802.11ad/ay) & Gesture Radar"]
+          },
+          {
+            freq: "76 – 81 GHz (W-Band Automotive)",
+            title: "Automotive Adaptive Cruise & Autonomous Collision Avoidance FMCW Radar",
+            desc: "Sweeps up to 4 GHz of chirp bandwidth to resolve target distance down to 4 cm and simultaneous Doppler velocity.",
+            tech: ["77–81 GHz Automotive ADAS & Autonomous FMCW Radar"]
+          }
+        ]
+      },
+      {
+        id: "THF",
+        ituNum: "ITU Band 12",
+        name: "Tremendously High Frequency (Terahertz / Sub-mm)",
+        range: "300 GHz – 3 THz",
+        defaultFreqHz: 300000000000,
+        flagshipSignal: "IEEE 802.15.3d 6G Terahertz & Sub-mm Astronomy",
+        linkedRadarLetters: [],
+        wavelength: "1 mm – 0.1 mm (100 µm)",
+        color: "linear-gradient(135deg, #4c1d95, #c084fc)",
+        glow: "rgba(192, 132, 252, 0.6)",
+        bounceShort: "Ultra-Short LOS / Space Vacuum",
+        canBounce: "NO (Extreme rotational water vapor absorption in Earth's lower atmosphere; propagates freely in space)",
+        bounceType: "mmwave_los",
+        propagation: "Bridges microwave electronics and far-infrared photonics. Terrestrial links suffer tens to hundreds of dB/km attenuation from humidity, restricting use to short indoor beams or high-altitude/space observatories.",
+        antennaInfo: "Micromachined silicon corrugated feedhorns, plasmonic nano-antennas, and cryo-cooled superconducting SIS mixers (λ/2 is only 0.5 mm at 300 GHz!).",
+        radarUse: "Terahertz non-destructive imaging radar (inspecting aerospace composites, pharmaceutical coatings, and silicon wafers).",
+        telecomUse: "Experimental 6G Terahertz 100 Gbps wireless links (IEEE 802.15.3d at 300 GHz), Event Horizon Telescope black-hole VLBI (345 GHz), and ALMA molecular cloud spectroscopy.",
+        subbands: [
+          {
+            freq: "275 – 325 GHz",
+            title: "IEEE 802.15.3d 100-Gbps Terahertz Wireless & Event Horizon VLBI",
+            desc: "Ultra-wide 50 GHz contiguous channels for data-center/kiosk links and sub-millimeter black hole interferometry.",
+            tech: ["IEEE 802.15.3d 6G Terahertz & Sub-mm Astronomy"]
+          }
+        ]
+      }
+    ];
+
+    /***************************************************************************
+     * 2. IEEE RADAR & MICROWAVE LETTER BANDS (WITH PARENT ITU MAPPING)
+     ***************************************************************************/
+    const IEEE_RADAR_BANDS = [
+      {
+        letter: "HF",
+        range: "3 – 30 MHz",
+        wave: "100m – 10m",
+        parentItu: "HF",
+        centerFreqHz: 15000000,
+        flagshipSignal: "Over-The-Horizon (OTH) Skywave Radar",
+        desc: "Over-The-Horizon (OTH) Skywave & Coastal Surface-Wave Radars (JORN, 29B6 Kontayner, CODAR). Bounces FMCW chirps off the ionospheric F-layer to detect aircraft, missiles, and ships 1,000–3,500 km beyond the horizon."
+      },
+      {
+        letter: "VHF",
+        range: "30 – 300 MHz",
+        wave: "10m – 1m",
+        parentItu: "VHF",
+        centerFreqHz: 137100000,
+        flagshipSignal: "NOAA APT & Meteor-M LRPT Weather Satellites",
+        desc: "Counter-Stealth Early Warning Radars (Nebo-SVU, JY-27) & Space Surveillance Fence. 1–3 meter wavelengths match the physical size of fighter aircraft stabilizers, inducing resonant Mie scattering that defeats RAM coatings."
+      },
+      {
+        letter: "UHF",
+        range: "300 MHz – 1 GHz",
+        wave: "1m – 30cm",
+        parentItu: "UHF",
+        centerFreqHz: 433920000,
+        flagshipSignal: "LoRa / LoRaWAN & Meshtastic Off-Grid Mesh",
+        desc: "Ballistic Missile Early Warning Phased Arrays (PAVE PAWS 420–450 MHz, BMEWS), E-2 Hawkeye AWACS radar, and Foliage-Penetrating (FOPEN) Synthetic Aperture Radar."
+      },
+      {
+        letter: "L-Band",
+        range: "1 – 2 GHz",
+        wave: "30cm – 15cm",
+        parentItu: "UHF",
+        centerFreqHz: 1090000000,
+        flagshipSignal: "ADS-B & Mode-S Aviation Transponder (1090 MHz)",
+        desc: "Long-Range Air Traffic Control Route Surveillance (ARSR-4, 250 NM range), 1090 MHz ADS-B / Mode-S transponders, NATO Link 16, GPS/Galileo/GLONASS navigation, and Inmarsat/Iridium satcoms."
+      },
+      {
+        letter: "S-Band",
+        range: "2 – 4 GHz",
+        wave: "15cm – 7.5cm",
+        parentItu: "SHF",
+        centerFreqHz: 2850000000,
+        flagshipSignal: "S-Band Doppler Weather Radar (NEXRAD WSR-88D)",
+        desc: "Terminal Airport Surveillance Radar (ASR-9/11), NEXRAD WSR-88D Doppler Weather Radar, Naval 3D Phased Array (AN/SPY-1 Aegis), Unified S-Band Apollo/Artemis spacecraft comms, and 2.4 GHz Wi-Fi/Bluetooth."
+      },
+      {
+        letter: "C-Band",
+        range: "4 – 8 GHz",
+        wave: "7.5cm – 3.75cm",
+        parentItu: "SHF",
+        centerFreqHz: 5800000000,
+        flagshipSignal: "Wi-Fi 4 / 5 / 6 / 6E / 7 (IEEE 802.11 OFDM)",
+        desc: "TV Weather Radars, Naval/SAM Fire-Control (Patriot, SPY-6), Aircraft Radar Altimeters (4.2–4.4 GHz), Sentinel-1 Earth Observation SAR, 5G C-Band, Wi-Fi 5/6/6E, and UWB Impulse Ranging."
+      },
+      {
+        letter: "X-Band",
+        range: "8 – 12 GHz",
+        wave: "3.75cm – 2.5cm",
+        parentItu: "SHF",
+        centerFreqHz: 9410000000,
+        flagshipSignal: "Marine X-Band Navigation Radar (9.4 GHz)",
+        desc: "Commercial & Naval Marine Navigation Radar (9.3–9.5 GHz), Fighter Aircraft AESA Fire-Control Radar (APG-77/81), Sea-Based X-Band Missile Defense Radar, and NASA Deep Space Network."
+      },
+      {
+        letter: "Ku-Band",
+        range: "12 – 18 GHz",
+        wave: "2.5cm – 1.67cm",
+        parentItu: "SHF",
+        centerFreqHz: 11700000000,
+        flagshipSignal: "Starlink LEO Broadband & DVB-S2X Ku-Band Downlink",
+        desc: "Starlink & OneWeb LEO User Downlinks (10.7–12.7 GHz), Direct Broadcast Satellite TV (DVB-S2X), Counter-UAS / Drone Detection Radars, and Spacecraft Rendezvous Radar."
+      },
+      {
+        letter: "K / Ka",
+        range: "18 – 40 GHz",
+        wave: "1.67cm – 7.5mm",
+        parentItu: "EHF",
+        centerFreqHz: 34700000000,
+        flagshipSignal: "60 GHz WiGig (IEEE 802.11ad/ay) & Gesture Radar",
+        desc: "Airport Surface Movement Radar (ASDE-X), Police K/Ka Speed Enforcement Radar (24.15 & 34.7 GHz), 5G NR FR2 mmWave (28/39 GHz), and High-Throughput Ka-Band Satellites."
+      },
+      {
+        letter: "V / W",
+        range: "40 – 110 GHz",
+        wave: "7.5mm – 2.7mm",
+        parentItu: "EHF",
+        centerFreqHz: 77000000000,
+        flagshipSignal: "77–81 GHz Automotive ADAS & Autonomous FMCW Radar",
+        desc: "77–81 GHz Automotive Autonomous/ADAS FMCW Radar, 60 GHz WiGig & Soli Gesture Radar, 71–86 GHz E-Band Wireless Fiber Backhaul, and 94 GHz Cloud Profiling Radar."
+      }
+    ];
+
+    /***************************************************************************
+     * 3. AUTHENTIC SIGIDWIKI DATABASE
+     ***************************************************************************/
+    const SIGID_DATABASE = [
+      // ELF & ULF
+      {
+        name: "ZEVS Russian Submarine Transmitter",
+        band: "ELF",
+        radarBand: "",
+        freq: "82.0 Hz",
+        freqHz: 82,
+        mode: "Strategic Submarine Bell",
+        modulation: "MSK (Minimum Shift Keying, ~0.1–1.0 Baud)",
+        bandwidth: "0.8 Hz – 2.0 Hz",
+        categories: ["Military", "Marine", "Utility", "Digital"],
+        wfType: "zevs_elf",
+        decoder: "Spectrum Lab / Baudline with Earth-probe or multi-thousand-turn induction coil",
+        antenna: "Dual 60 km grounded power-line earth dipoles into Kola Peninsula crystalline granite",
+        bounce: "Earth-Ionosphere Spherical Waveguide (Global + 300m ocean depth)",
+        desc: "Ultra-deep strategic communication system operated by the Russian Navy near Murmansk at 82 Hz. Waterfall shows a razor-thin phase-modulated carrier flanked by 50 Hz / 60 Hz continental power-grid hum lines."
+      },
+      {
+        name: "AC Power Grid Hum (50/60 Hz)",
+        band: "ELF",
+        radarBand: "",
+        freq: "50.0 Hz (EU/Asia) / 60.0 Hz (Americas)",
+        freqHz: 60,
+        mode: "Utility Power Transmission",
+        modulation: "Unmodulated Sine Carrier + Odd Harmonics (150/180 Hz)",
+        bandwidth: "0.05 Hz (Grid load drift)",
+        categories: ["Utility", "Analogue"],
+        wfType: "zevs_elf",
+        decoder: "ENF (Electrical Network Frequency) forensic phase tracking",
+        antenna: "Unintentional radiation from continental high-voltage transmission lines",
+        bounce: "Near-field induction & Earth-return conduction",
+        desc: "Fundamental utility grid frequency and its odd harmonics. Slight frequency wander (±0.02 Hz) reflects real-time continental electricity supply vs. demand and is used for forensic timestamping of recordings."
+      },
+      {
+        name: "Through-The-Earth (TTE) Mine Rescue Comms",
+        band: "ULF",
+        radarBand: "",
+        freq: "1,200 Hz (300 – 3,000 Hz)",
+        freqHz: 1200,
+        mode: "Subterranean Emergency Comms",
+        modulation: "BPSK / MSK (10 – 100 bps)",
+        bandwidth: "50 Hz",
+        categories: ["Utility", "Digital"],
+        wfType: "vlf_msk",
+        decoder: "FlexAlert / PED Underground Receiver",
+        antenna: "50m–200m surface wire loop coupled through solid rock overburden",
+        bounce: "Direct magnetic induction through 300–800 meters of solid rock strata",
+        desc: "Used after underground mine collapses when tunnels are blocked and UHF leaky-feeder cables are destroyed. ULF magnetic fields pass straight through solid rock."
+      },
+      {
+        name: "Atmospheric Whistlers & Dawn Chorus",
+        band: "ULF",
+        radarBand: "",
+        freq: "500 Hz – 4,000 Hz",
+        freqHz: 2000,
+        mode: "Magnetospheric Natural Emission",
+        modulation: "Dispersive Descending Frequency Sweep",
+        bandwidth: "2.5 kHz",
+        categories: ["Utility", "Analogue"],
+        wfType: "oth_fmcw",
+        decoder: "VLF E-Field Whip + Soundcard Spectrogram (INSPIRE Project)",
+        antenna: "High-impedance active E-field vertical whip or orthogonal magnetic loops",
+        bounce: "Guided along geomagnetic field lines through the magnetosphere between hemispheres",
+        desc: "Lightning impulses enter the ionosphere and travel thousands of kilometers along Earth's magnetic field lines; higher frequencies travel faster than lower ones, arriving as a musical descending 'peee-ooo' whistle."
+      },
+
+      // VLF & LF
+      {
+        name: "US / NATO Submarine Fleet Broadcast (NAA / NWC)",
+        band: "VLF",
+        radarBand: "",
+        freq: "24.0 kHz (NAA Cutler) / 19.8 kHz (NWC Exmouth) / 24.8 kHz (NLK)",
+        freqHz: 24000,
+        mode: "Naval Submarine Broadcast (STANAG 5030)",
+        modulation: "MSK (Minimum Shift Keying, 200 Baud)",
+        bandwidth: "300 Hz",
+        categories: ["Military", "Marine", "Digital"],
+        wfType: "vlf_msk",
+        decoder: "MultiPSK / Spectrum Lab MSK Demodulator",
+        antenna: "1–2 Megawatt Trideco 26-tower umbrella array (304m tall masts)",
+        bounce: "D-Layer / Ocean Spherical Waveguide (Global range, ~25m seawater depth)",
+        desc: "Megawatt-class naval transmitters broadcasting continuous encrypted 200-baud MSK fleet traffic. On an SDR waterfall, it produces a textbook twin-peaked MSK crown exactly 300 Hz wide."
+      },
+      {
+        name: "RSDN-20 (Alpha) Russian Navigation",
+        band: "VLF",
+        radarBand: "",
+        freq: "11.905 kHz / 12.649 kHz / 14.881 kHz",
+        freqHz: 12649,
+        mode: "Hyperbolic Radionavigation",
+        modulation: "Sequential 400ms Phase-Coherent CW Tone Bursts (3.6s cycle)",
+        bandwidth: "25 Hz per channel",
+        categories: ["Navigation", "Military", "Utility"],
+        wfType: "alpha_rsdn",
+        decoder: "VLF Phase Comparator / Spectrum Lab",
+        antenna: "Top-loaded umbrella vertical masts (Krasnodar, Novosibirsk, Revda)",
+        bounce: "D-Layer Waveguide (6,000+ km range across Arctic & Eurasia)",
+        desc: "Russian long-range hyperbolic navigation system. Transmits synchronized 400 ms tone dashes stepping sequentially across three VLF frequencies."
+      },
+      {
+        name: "WWVB / DCF77 / JJY Atomic Time Signals",
+        band: "LF",
+        radarBand: "",
+        freq: "60.0 kHz (WWVB US / MSF UK) / 77.5 kHz (DCF77 EU)",
+        freqHz: 60000,
+        mode: "National Atomic Time Standard",
+        modulation: "PWM Carrier Drop (-17 dB for 0.2s/0.5s/0.8s) + BPSK (1 bps)",
+        bandwidth: "10 Hz",
+        categories: ["Time", "Utility", "Digital"],
+        wfType: "wwvb_pwm",
+        decoder: "Radio-controlled wall clocks, MultiPSK, DCF77 Analyzer",
+        antenna: "6–10 cm ferrite rod loopstick (Rx) / 122m top-loaded vertical towers (Tx)",
+        bounce: "Stable Surface Groundwave (1,500 km) + Night E-Layer Skywave (3,500 km)",
+        desc: "Broadcasts official atomic UTC time at 1 bit per second. Every second on the waterfall, the carrier notch-drops for 200 ms (binary 0), 500 ms (binary 1), or 800 ms (position marker)."
+      },
+      {
+        name: "eLORAN / LORAN-C Terrestrial Navigation",
+        band: "LF",
+        radarBand: "",
+        freq: "100.0 kHz",
+        freqHz: 100000,
+        mode: "Pulsed Hyperbolic Radionavigation",
+        modulation: "Pulsed Phase Code + Eurofix Data (GRI Pulse Groups)",
+        bandwidth: "20 kHz (90–110 kHz)",
+        categories: ["Navigation", "Marine", "Aviation", "Digital"],
+        wfType: "loran_pulse",
+        decoder: "eLORAN Timing Receiver / sdr-loran",
+        antenna: "200m–400m vertical monopole mast; E-field whip Rx",
+        bounce: "Surface Groundwave (1,800 km) + Skywave hops",
+        desc: "High-power 100 kHz pulse groups occupying 90–110 kHz with characteristic sinc spectral sidelobes. Acts as an unjammable terrestrial backup to satellite GNSS."
+      },
+      {
+        name: "125 kHz LF RFID & Animal Transponder",
+        band: "LF",
+        radarBand: "",
+        freq: "125.0 kHz (Access Cards) / 134.2 kHz (ISO 11784 Pet Tags)",
+        freqHz: 125000,
+        mode: "Inductive Proximity RFID",
+        modulation: "OOK / Manchester / FSK / BPSK Load Modulation",
+        bandwidth: "6 kHz",
+        categories: ["Commercial", "Digital", "Utility"],
+        wfType: "ndb_mcw",
+        decoder: "Proxmark3 / Flipper Zero",
+        antenna: "Multi-turn copper wire coil inside plastic badge or glass pet capsule",
+        bounce: "Near-field magnetic inductive coupling (2–10 cm)",
+        desc: "Reader energizes the battery-less tag via a continuous 125 kHz magnetic field; the tag replies by switching a load resistor across its coil, creating symmetrical modulation sidebands."
+      },
+      {
+        name: "Aviation Non-Directional Beacon (NDB)",
+        band: "LF",
+        radarBand: "",
+        freq: "190 kHz – 535 kHz (e.g. 332 kHz)",
+        freqHz: 332000,
+        mode: "Aeronautical & Marine Homing Beacon",
+        modulation: "MCW (AM Carrier + Symmetrical ±400 Hz or ±1020 Hz Morse CW ID)",
+        bandwidth: "800 Hz – 2.1 kHz",
+        categories: ["Aviation", "Navigation", "Marine", "Analogue"],
+        wfType: "ndb_mcw",
+        decoder: "Aircraft ADF Receiver / CW Skimmer / Any SSB/AM Receiver",
+        antenna: "T-antenna or mast radiator; aircraft loop + sense antenna",
+        bounce: "Surface Groundwave (50–300 km)",
+        desc: "Continuous central carrier flanked by symmetrical ±1020 Hz or ±400 Hz Morse code identification dots and dashes on both sidebands simultaneously."
+      },
+
+      // MF & HF
+      {
+        name: "NAVTEX Maritime Weather & Safety Broadcast",
+        band: "MF",
+        radarBand: "",
+        freq: "518.0 kHz (Intl English) / 490.0 kHz (National Language)",
+        freqHz: 518000,
+        mode: "GMDSS Maritime Safety Teletype",
+        modulation: "FSK (SITOR-B / NBDP, 100 Baud, 170 Hz shift, FEC)",
+        bandwidth: "300 Hz",
+        categories: ["Marine", "Utility", "Digital"],
+        wfType: "navtex_sitor",
+        decoder: "Fldigi / MultiPSK / YAND / Shipboard NAVTEX Receiver",
+        antenna: "Active E-field vertical whip or tuned ferrite loop",
+        bounce: "Coastal Groundwave (400 km day / 800+ km night)",
+        desc: "Mandatory GMDSS teletype on commercial vessels broadcasting navigational warnings, meteorological gales, and search-and-rescue alerts using twin-tone 100-baud FSK with 170 Hz shift."
+      },
+      {
+        name: "AM Mediumwave & Shortwave Broadcast",
+        band: "MF",
+        radarBand: "",
+        freq: "530 – 1,710 kHz (MW) & 3.2 – 26.1 MHz (SW)",
+        freqHz: 1000000,
+        mode: "Commercial Analog Audio Broadcast",
+        modulation: "A3E Double-Sideband Amplitude Modulation",
+        bandwidth: "9 kHz / 10 kHz (MW) or 5 kHz (SW)",
+        categories: ["Commercial", "Analogue"],
+        wfType: "am_broadcast",
+        decoder: "Envelope Detector / Synchronous AM (SAM) in any SDR",
+        antenna: "Quarter-wave vertical tower (MW) or Curtain Array (SW); Ferrite loop Rx",
+        bounce: "Daytime Groundwave (MW) / Nighttime & Global Ionospheric Skywave",
+        desc: "Features a bright, solid center carrier line containing 50%+ of total transmitted power, flanked by symmetrical upper and lower voice/music modulation sidebands."
+      },
+      {
+        name: "CW (Continuous Wave Morse Code)",
+        band: "HF",
+        radarBand: "HF",
+        freq: "1.8 / 3.5 / 7.0 / 10.1 / 14.0 / 21.0 / 28.0 MHz",
+        freqHz: 7025000,
+        mode: "Radiotelegraphy (A1A)",
+        modulation: "OOK (On-Off Keyed Carrier, 12–40 WPM)",
+        bandwidth: "100 Hz – 250 Hz",
+        categories: ["Amateur", "Military", "Marine", "Analogue"],
+        wfType: "cw_morse",
+        decoder: "Human Ear / CW Skimmer / Fldigi",
+        antenna: "Half-wave dipole or vertical whip",
+        bounce: "Global Multi-Hop F-Layer Skywave",
+        desc: "The original wireless mode: switches a pure RF carrier on and off in International Morse dits and dahs. Because all transmitter power is concentrated in ~100 Hz, it punches through heavy noise."
+      },
+      {
+        name: "SSB (Single Sideband Voice - USB/LSB)",
+        band: "HF",
+        radarBand: "HF",
+        freq: "3.0 – 30.0 MHz (e.g. 8,992 kHz US Air Force HFGCS / 14.200 MHz)",
+        freqHz: 14200000,
+        mode: "Tactical, Maritime, Aviation & Amateur Voice (J3E)",
+        modulation: "Suppressed-Carrier Single Sideband (USB above 10 MHz / Military)",
+        bandwidth: "2.4 kHz – 2.8 kHz",
+        categories: ["Amateur", "Military", "Aviation", "Marine", "Analogue"],
+        wfType: "ssb_voice",
+        decoder: "Product Detector + BFO in USB or LSB mode",
+        antenna: "Half-wave dipole, Yagi, or aircraft/ship HF whip",
+        bounce: "Global Multi-Hop Ionospheric F-Layer Skywave",
+        desc: "Eliminates the power-hungry AM carrier and one redundant sideband, putting 100% of transmitter power into syllabic voice peaks. Shows asymmetric speech formant clouds on the waterfall with no carrier line."
+      },
+      {
+        name: "UVB-76 ('The Buzzer' / ZhUOZ)",
+        band: "HF",
+        radarBand: "HF",
+        freq: "4,625.0 kHz",
+        freqHz: 4625000,
+        mode: "Military Command Channel Marker",
+        modulation: "USB with Reduced Carrier (25 buzzing bursts/min, 0.8s duration)",
+        bandwidth: "3.0 kHz",
+        categories: ["Military", "Numbers", "Analogue"],
+        wfType: "uvb76_buzzer",
+        decoder: "Any HF SSB receiver tuned to 4625 kHz USB",
+        antenna: "Half-wave dipole (~30.8m long for 4.625 MHz)",
+        bounce: "NVIS & F-Layer Skywave (1,000–4,000 km across Europe/Russia)",
+        desc: "Iconic Russian Western Military District channel marker broadcasting 25 harmonic buzz tones per minute continuously since the late 1970s, occasionally interrupted by live Russian voice codewords ('Monolith' messages)."
+      },
+      {
+        name: "HM01 Cuban Hybrid Numbers Station",
+        band: "HF",
+        radarBand: "HF",
+        freq: "9,065 / 10,345 / 11,435 / 16,180 kHz",
+        freqHz: 11435000,
+        mode: "Intelligence Hybrid Voice + Data Broadcast",
+        modulation: "AM (Synthesized Spanish Female Voice + 8-Carrier RDFT File Transfer)",
+        bandwidth: "6.0 kHz",
+        categories: ["Numbers", "Digital", "Analogue"],
+        wfType: "am_broadcast",
+        decoder: "AM Receiver + DIGTRX (for RDFT encrypted file extraction)",
+        antenna: "High-gain curtain array (Bejucal, Cuba); SW dipole Rx",
+        bounce: "Multi-Hop F2 Skywave across Americas & Europe",
+        desc: "Transmits synthesized Spanish female voice reading 5-figure groups interspersed with high-speed 8-tone RDFT digital bursts."
+      },
+      {
+        name: "RTTY (Radio Teletype - Baudot FSK)",
+        band: "HF",
+        radarBand: "HF",
+        freq: "4.583 / 7.040 / 10.1008 (DWD Weather) / 14.080 MHz",
+        freqHz: 14080000,
+        mode: "Radioteletype Weather, Naval & Amateur Keyboard",
+        modulation: "FSK (45.45 / 50 / 75 Baud, 170 Hz or 450 Hz Shift, 5-bit ITA2)",
+        bandwidth: "250 Hz – 500 Hz",
+        categories: ["Amateur", "Marine", "Military", "Utility", "Digital"],
+        wfType: "rtty_fsk",
+        decoder: "MMTTY / Fldigi / MultiPSK",
+        antenna: "Half-wave dipole or vertical",
+        bounce: "Global Multi-Hop Ionospheric F-Layer",
+        desc: "Unmistakable twin 'railroad track' Mark and Space frequency lines rapidly alternating back and forth with a musical warbling 'diddle' sound."
+      },
+      {
+        name: "FT8 Weak-Signal Amateur Digital Mode",
+        band: "HF",
+        radarBand: "HF",
+        freq: "3.573 / 7.074 / 10.136 / 14.074 / 21.074 / 28.074 MHz",
+        freqHz: 14074000,
+        mode: "Synchronized Weak-Signal Keyboard Mode",
+        modulation: "8-GFSK (6.25 Baud, 12.64s TX / 2.36s decode pause every 15s UTC)",
+        bandwidth: "50 Hz per signal (up to 40 signals in 2.5 kHz USB passband)",
+        categories: ["Amateur", "Digital"],
+        wfType: "ft8_wsjtx",
+        decoder: "WSJT-X / JTDX / GridTracker",
+        antenna: "Half-wave dipole (10.12m on 20m band) or end-fed wire",
+        bounce: "Global Multi-Hop Ionospheric F2 Bounce (decodes down to -21 dB SNR!)",
+        desc: "World's most active HF mode. Every 15 seconds on the UTC clock (:00, :15, :30, :45), dozens of narrow 50 Hz 8-GFSK bars light up simultaneously for 12.6 seconds followed by a 2.4-second silent gap."
+      },
+      {
+        name: "WSPR (Weak Signal Propagation Reporter)",
+        band: "HF",
+        radarBand: "HF",
+        freq: "7.0386 / 10.1387 / 14.0956 MHz",
+        freqHz: 14095600,
+        mode: "Ultra-Weak Ionospheric Propagation Beacon",
+        modulation: "4-FSK (1.4648 Baud, 1.46 Hz tone spacing, 110.6s frame)",
+        bandwidth: "6 Hz",
+        categories: ["Amateur", "Digital", "Utility"],
+        wfType: "zevs_elf",
+        decoder: "WSJT-X (WSPR mode) / wsprdaemon",
+        antenna: "Dipole, vertical, or small magnetic loop",
+        bounce: "Global F-Layer Skywave (crosses oceans on 0.1 Watts / 200 mW!)",
+        desc: "Transmits callsign, 4-character Maidenhead grid locator, and dBm power in a 6 Hz wide signal that decodes down to -28 dB SNR, mapping global propagation in real time."
+      },
+      {
+        name: "SSTV (Slow-Scan Television - Martin/Scottie)",
+        band: "HF",
+        radarBand: "HF",
+        freq: "14.230 MHz / 7.171 MHz (& 145.800 MHz from ISS)",
+        freqHz: 14230000,
+        mode: "Analog Narrowband Image Transmission",
+        modulation: "AF-FM over SSB (1200 Hz Sync, 1500 Hz Black → 2300 Hz White)",
+        bandwidth: "2.5 kHz",
+        categories: ["Amateur", "Satellite", "Analogue"],
+        wfType: "sstv_martin",
+        decoder: "MMSSTV / QSSTV / Robot36",
+        antenna: "20m Dipole (10.0m) or 2m Yagi for ISS passes",
+        bounce: "Global HF Skywave or Direct LEO Downlink from International Space Station",
+        desc: "Transmits color pictures over a standard 3 kHz voice channel in ~110 seconds. Waterfall shows rhythmic 1200 Hz left-edge horizontal sync ticks and shimmering RGB scanline luminance sweeps between 1500–2300 Hz."
+      },
+      {
+        name: "HFDL (High Frequency Data Link - ARINC 635)",
+        band: "HF",
+        radarBand: "HF",
+        freq: "8.942 / 10.081 / 11.384 / 13.303 / 17.928 MHz",
+        freqHz: 11384000,
+        mode: "Transoceanic Commercial Aviation ACARS Data",
+        modulation: "M-PSK (2/4/8-PSK, 1800 Symbols/sec, TDMA 32s/13-slot frame)",
+        bandwidth: "2.7 kHz (USB)",
+        categories: ["Aviation", "Digital", "Commercial"],
+        wfType: "stanag_4285",
+        decoder: "dumphfdl / PC-HFDL / MultiPSK",
+        antenna: "Aircraft tail-fin shunt/notch HF coupler",
+        bounce: "Global F-Layer Skywave (Polar & Oceanic airline tracks)",
+        desc: "Used by airliners over oceans and poles to transmit GPS coordinates, winds aloft, and ATC messages to 17 global ground stations (Reykjavik, Shannon, San Francisco, Guam, etc.)."
+      },
+      {
+        name: "2G / 3G Automatic Link Establishment (ALE)",
+        band: "HF",
+        radarBand: "HF",
+        freq: "3.0 – 30.0 MHz (Military / Diplomatic / FEMA / Coast Guard)",
+        freqHz: 11175000,
+        mode: "Automated HF Channel Sounding & Handshake",
+        modulation: "8-FSK (MIL-STD-188-141, 125 Baud, 8 tones from 750–2500 Hz)",
+        bandwidth: "2.0 kHz",
+        categories: ["Military", "Aviation", "Utility", "Digital"],
+        wfType: "ale_2g",
+        decoder: "Sorcerer / MultiPSK / Fldigi",
+        antenna: "Broadband Terminated Folded Dipole (T2FD) or NVIS whip",
+        bounce: "NVIS & Multi-Hop Skywave",
+        desc: "Distinctive bubbling 8-FSK bursts that automatically test ionospheric channel quality across preset frequencies and link HF radios without operator intervention."
+      },
+      {
+        name: "STANAG 4285 / 4539 NATO HF Modem",
+        band: "HF",
+        radarBand: "HF",
+        freq: "4.0 – 22.0 MHz (NATO Naval Broadcasts)",
+        freqHz: 8420000,
+        mode: "Encrypted Military Serial-Tone Data",
+        modulation: "8-PSK / 16-QAM / 64-QAM (2400 Baud single-tone serial modem)",
+        bandwidth: "2.4 kHz – 3.0 kHz",
+        categories: ["Military", "Marine", "Digital"],
+        wfType: "stanag_4285",
+        decoder: "Sorcerer / Rivet / SigIDWiki STANAG Analyzer",
+        antenna: "10m vertical warship whip",
+        bounce: "Surface Wave + Ionospheric Skywave",
+        desc: "Standard NATO continuous serial-tone HF data link. Appears as a dense, flat 2.4 kHz wide block with subtle Doppler equalization probe patterns."
+      },
+      {
+        name: "DRM (Digital Radio Mondiale)",
+        band: "HF",
+        radarBand: "HF",
+        freq: "3.9 – 21.8 MHz (e.g. 9,410 kHz / 15,215 kHz)",
+        freqHz: 9410000,
+        mode: "Digital Shortwave Broadcast",
+        modulation: "COFDM (16-QAM / 64-QAM + xHE-AAC Audio)",
+        bandwidth: "10.0 kHz",
+        categories: ["Commercial", "Digital"],
+        wfType: "tetra_pi4",
+        decoder: "Dream DRM Receiver / Gqrx / SDR++",
+        antenna: "Shortwave dipole or active loop",
+        bounce: "Multi-Hop Ionospheric F-Layer Skywave",
+        desc: "Delivers near-FM digital audio quality over shortwave inside a sharp, rectangular 10 kHz COFDM block with bright frequency-reference pilot lines."
+      },
+      {
+        name: "Over-The-Horizon (OTH) Skywave Radar",
+        band: "HF",
+        radarBand: "HF",
+        freq: "6.0 – 28.0 MHz (e.g. 14.8 MHz 29B6 Kontayner / JORN / PLUTO)",
+        freqHz: 14800000,
+        mode: "Strategic Early Warning Skywave Radar",
+        modulation: "FMCW (Linear Frequency Modulated Chirps, 10–60 sweeps/sec)",
+        bandwidth: "12 kHz – 100 kHz",
+        categories: ["Radar", "Military"],
+        wfType: "oth_fmcw",
+        decoder: "Visual Waterfall Chirp Rate & Bandwidth Analysis",
+        antenna: "1 km to 3 km long phased array of log-periodic curtains",
+        bounce: "Ionospheric F-Layer Reflection onto target zone 1,000–3,500 km away",
+        desc: "Sweeps repetitive diagonal FMCW chirps across tens of kHz, sounding like a loud harsh buzzsaw ('brap-brap-brap'). Bounces off the ionosphere to detect aircraft and ships thousands of kilometers over the horizon."
+      },
+      {
+        name: "CODAR SeaSonde Oceanographic Radar",
+        band: "HF",
+        radarBand: "HF",
+        freq: "4.5 / 13.5 / 25.4 MHz",
+        freqHz: 13500000,
+        mode: "Coastal Surface-Wave Ocean Current Radar",
+        modulation: "Slow Interrupted FMCW Sweep (1 Hz or 2 Hz sweep rate)",
+        bandwidth: "25 kHz – 100 kHz",
+        categories: ["Radar", "Marine", "Utility"],
+        wfType: "codar_sweep",
+        decoder: "CODAR Radial Suite / Waterfall Inspection",
+        antenna: "Compact crossed-loop + monopole mast on coastal beaches",
+        bounce: "Conductive Saltwater Surface-Wave Diffraction (up to 200 km offshore)",
+        desc: "Slow 1–2 sweeps-per-second diagonal chirp lines across the waterfall that measure surface ocean currents and wave height via Bragg scatter."
+      },
+      {
+        name: "13.56 MHz NFC & Contactless Smartcards",
+        band: "HF",
+        radarBand: "HF",
+        freq: "13.560 MHz (Global ISM Band)",
+        freqHz: 13560000,
+        mode: "Contactless Payment, e-Passport & MIFARE RFID",
+        modulation: "ASK (10% or 100% OOK) + 847.5 kHz Load Subcarrier (ISO 14443)",
+        bandwidth: "1.7 MHz (including sideband subcarriers)",
+        categories: ["Commercial", "Digital", "Utility"],
+        wfType: "ndb_mcw",
+        decoder: "Proxmark3 / NFC Smartphone / Hydrabus",
+        antenna: "Planar spiral PCB inductive coil (4 cm × 6 cm)",
+        bounce: "Near-field magnetic inductive coupling (< 10 cm)",
+        desc: "Powers Apple Pay, Google Pay, contactless credit cards, and biometric passports via a 13.56 MHz inductive field with ±847.5 kHz load-modulated sidebands."
+      },
+
+      // VHF SIGNALS
+      {
+        name: "FM Broadcast Stereo + RDS (Radio Data System)",
+        band: "VHF",
+        radarBand: "VHF",
+        freq: "87.5 – 108.0 MHz (e.g. 98.5 MHz)",
+        freqHz: 98500000,
+        mode: "Commercial Analog Stereo + Digital Subcarrier",
+        modulation: "WFM (±75 kHz Dev) + 19 kHz Pilot + 38 kHz DSB Stereo + 57 kHz RDS",
+        bandwidth: "180 kHz – 200 kHz",
+        categories: ["Commercial", "Analogue", "Digital"],
+        wfType: "wfm_rds",
+        decoder: "SDR++ / Gqrx / Redsea (RDS decoder)",
+        antenna: "75 cm telescopic whip or circularly polarized FM broadcast bays",
+        bounce: "Line-of-Sight (60–100 km) + Summer Sporadic-E up to 1,800 km",
+        desc: "Wideband FM broadcast signal showing dynamic center audio deviation, razor-sharp ±19 kHz stereo pilot lines, ±38 kHz stereo difference lobes, and ±57 kHz BPSK RDS digital station data."
+      },
+      {
+        name: "VOR (VHF Omnidirectional Range) Aviation Navigation",
+        band: "VHF",
+        radarBand: "VHF",
+        freq: "108.00 – 117.95 MHz (e.g. 114.10 MHz)",
+        freqHz: 114100000,
+        mode: "Aeronautical Azimuth Radionavigation",
+        modulation: "AM (30 Hz Reference + ±9,960 Hz FM Subcarrier + 1020 Hz Morse ID)",
+        bandwidth: "25 kHz",
+        categories: ["Aviation", "Navigation", "Analogue"],
+        wfType: "wfm_rds",
+        decoder: "Aircraft VOR Receiver / LUW / SDRangel VOR Demodulator",
+        antenna: "Phased horizontal Alford loop array inside white Doppler cone",
+        bounce: "Line-of-Sight up to 200 NM at cruising altitude",
+        desc: "Encodes magnetic radial bearing (0–360°) as the phase angle between a 30 Hz AM reference and a 30 Hz FM signal on ±9.96 kHz subcarriers."
+      },
+      {
+        name: "VHF Airband Voice & ACARS",
+        band: "VHF",
+        radarBand: "VHF",
+        freq: "118.0 – 136.975 MHz (ACARS on 131.550 / 131.725 MHz)",
+        freqHz: 131550000,
+        mode: "Air Traffic Control Voice & Cockpit Telemetry",
+        modulation: "AM Voice (A3E) / 2400 bps MSK Burst (ACARS)",
+        bandwidth: "8.33 kHz or 25 kHz",
+        categories: ["Aviation", "Analogue", "Digital"],
+        wfType: "am_broadcast",
+        decoder: "acarsdec / PlanePlotter / Any Airband AM Scanner",
+        antenna: "Quarter-wave blade antenna (~54 cm) on aircraft fuselage",
+        bounce: "Line-of-Sight (up to 350 km for airliners at 38,000 ft)",
+        desc: "Civil aviation uses Amplitude Modulation so weak emergency calls are not muted by FM capture effect, while 131.550 MHz carries short 2400-baud MSK ACARS flight-plan bursts."
+      },
+      {
+        name: "VDL Mode 2 (VHF Digital Link - Aviation CPDLC)",
+        band: "VHF",
+        radarBand: "VHF",
+        freq: "136.975 MHz (Global CSC) / 136.725–136.900 MHz",
+        freqHz: 136975000,
+        mode: "High-Speed Controller-Pilot Data Link (CPDLC)",
+        modulation: "D8PSK (31.5 kbps, 10,500 Symbols/sec burst)",
+        bandwidth: "25 kHz",
+        categories: ["Aviation", "Digital"],
+        wfType: "adsb_ppm",
+        decoder: "dumpvdl2 / MultiPSK",
+        antenna: "Aircraft VHF blade antenna (~52 cm)",
+        bounce: "Air-to-Ground Line-of-Sight",
+        desc: "Short, crisp 25 kHz wide D8PSK digital packet bursts carrying cockpit ATC text clearances and aircraft telemetry."
+      },
+      {
+        name: "NOAA APT & Meteor-M LRPT Weather Satellites",
+        band: "VHF",
+        radarBand: "VHF",
+        freq: "137.100 / 137.620 / 137.9125 MHz",
+        freqHz: 137100000,
+        mode: "Polar LEO Weather Satellite Direct Image Downlink",
+        modulation: "APT (FM with 2400 Hz AM Subcarrier, 2 lines/sec) / LRPT (OQPSK)",
+        bandwidth: "34 kHz (APT) / 120 kHz (LRPT)",
+        categories: ["Satellite", "Utility", "Analogue", "Digital"],
+        wfType: "noaa_apt",
+        decoder: "SatDump / NOAA-APT / WXtoImg",
+        antenna: "120° V-Dipole (52.0 cm legs) or Quadrifilar Helix (QFH)",
+        bounce: "Direct Space-to-Earth Line-of-Sight from 850 km polar orbit",
+        desc: "Broadcasts live visible and infrared Earth cloud imagery continuously as the satellite passes overhead. Produces an unmistakable rhythmic 2-Hz 'tick-tock' sync pulse pattern on the waterfall."
+      },
+      {
+        name: "APRS (Automatic Packet Reporting System)",
+        band: "VHF",
+        radarBand: "VHF",
+        freq: "144.390 MHz (NA) / 144.800 MHz (EU) / 145.825 MHz (ISS)",
+        freqHz: 144390000,
+        mode: "Amateur Tactical GPS & Weather Packet Network",
+        modulation: "AFSK (Bell 202, 1200 Baud, 1200/2200 Hz tones over NFM)",
+        bandwidth: "12.5 kHz",
+        categories: ["Amateur", "Digital", "Satellite"],
+        wfType: "pocsag_pager",
+        decoder: "Direwolf / Soundmodem / APRSdroid",
+        antenna: "2m Quarter-wave whip (49.3 cm) or J-Pole",
+        bounce: "Line-of-Sight + Mountain Digipeaters + ISS Space Digipeater",
+        desc: "Short 0.3–0.8 second AX.25 packet bursts broadcasting real-time GPS coordinates, weather station telemetry, and text messages."
+      },
+      {
+        name: "POCSAG / FLEX Alphanumeric Pager Broadcast",
+        band: "VHF",
+        radarBand: "VHF",
+        freq: "152.480 MHz / 153.350 MHz / 454.0 MHz / 929.6125 MHz",
+        freqHz: 152480000,
+        mode: "Hospital, Fire & Industrial Simulcast Paging",
+        modulation: "FSK (512 / 1200 / 2400 bps, ±4.5 kHz Shift) or 4-FSK (FLEX)",
+        bandwidth: "12.5 kHz – 25 kHz",
+        categories: ["Commercial", "Utility", "Digital"],
+        wfType: "pocsag_pager",
+        decoder: "PDW / multimon-ng / SDRangel Pager Demod",
+        antenna: "Internal small ferrite/loop inside belt pager; hilltop collinear array Tx",
+        bounce: "High-power Line-of-Sight with deep hospital basement penetration",
+        desc: "Starts with a distinct 576-bit alternating 101010 preamble (creating twin outer rails) followed by dense FSK data batches."
+      },
+      {
+        name: "AIS (Automatic Identification System - Maritime)",
+        band: "VHF",
+        radarBand: "VHF",
+        freq: "161.975 MHz (AIS 1) & 162.025 MHz (AIS 2)",
+        freqHz: 161975000,
+        mode: "Global Ship Collision Avoidance & Tracking",
+        modulation: "GMSK (9600 bps, 26.6 ms SOTDMA time-slotted bursts)",
+        bandwidth: "25 kHz",
+        categories: ["Marine", "Navigation", "Digital", "Satellite"],
+        wfType: "adsb_ppm",
+        decoder: "AIS-catcher / rtl_ais / OpenCPN",
+        antenna: "Marine VHF collinear whip (~90 cm) + LEO AIS Satellites",
+        bounce: "Line-of-Sight (40 NM) + Tropospheric Ducting (300 NM) + Space LEO",
+        desc: "Every commercial vessel transmits short 26-millisecond GMSK bursts every few seconds containing its MMSI, vessel name, GPS position, course, and speed."
+      },
+      {
+        name: "APCO Project 25 (P25 Phase 1 & Phase 2)",
+        band: "VHF",
+        radarBand: "VHF",
+        freq: "154.0 MHz / 460.0 MHz / 770.0 MHz / 855.0 MHz",
+        freqHz: 154250000,
+        mode: "Public Safety Digital Trunked Voice & Data",
+        modulation: "C4FM (4-FSK: -1.8, -0.6, +0.6, +1.8 kHz, 4800 Baud) / H-DQPSK",
+        bandwidth: "12.5 kHz",
+        categories: ["Trunked", "Digital", "Utility"],
+        wfType: "p25_c4fm",
+        decoder: "SDRTrunk / OP25 / DSD+ FastLane / Uniden SDS100",
+        antenna: "Quarter-wave whip (~46 cm at VHF, ~9 cm at 800 MHz)",
+        bounce: "Line-of-Sight / Multi-Site Simulcast Repeater Network",
+        desc: "Public safety digital radio standard. On a high-resolution waterfall, the four C4FM deviation columns (-1.8, -0.6, +0.6, +1.8 kHz) are clearly visible."
+      },
+      {
+        name: "DAB / DAB+ (Digital Audio Broadcasting)",
+        band: "VHF",
+        radarBand: "VHF",
+        freq: "174.928 – 239.200 MHz (e.g. 225.648 MHz Block 12B)",
+        freqHz: 225648000,
+        mode: "Digital Broadcast Radio Multiplex",
+        modulation: "DQPSK COFDM (1,536 orthogonal subcarriers, HE-AAC v2)",
+        bandwidth: "1.536 MHz",
+        categories: ["Commercial", "Digital"],
+        wfType: "lte_5g_ofdma",
+        decoder: "welle.io / Qt-DAB / AbracaDABra",
+        antenna: "Quarter-wave vertical whip (~31.6 cm)",
+        bounce: "Single Frequency Network (SFN) Line-of-Sight",
+        desc: "Packs up to 20 digital radio stations into a 1.536 MHz wide flat-topped COFDM ensemble block with a periodic null symbol every 96 ms."
+      },
+
+      // UHF SIGNALS
+      {
+        name: "TETRA (Terrestrial Trunked Radio)",
+        band: "UHF",
+        radarBand: "UHF",
+        freq: "380.0 – 400.0 MHz (Emergency) / 410.0 – 430.0 MHz (Civil)",
+        freqHz: 390000000,
+        mode: "European & Global Digital Trunked Network",
+        modulation: "π/4-DQPSK (36 kbps, 18,000 Symbols/s, 4-Slot TDMA)",
+        bandwidth: "25 kHz",
+        categories: ["Trunked", "Digital", "Military", "Utility"],
+        wfType: "tetra_pi4",
+        decoder: "TETRA Trunk Tracker / osmo-tetra / Telive",
+        antenna: "UHF quarter-wave stubby whip (~18.3 cm)",
+        bounce: "Cellular-style Line-of-Sight Trunked Base Stations",
+        desc: "Continuous 25 kHz wide downlink control channels with sharp root-raised-cosine skirts and 4-slot TDMA framing."
+      },
+      {
+        name: "Vaisala RS41 Weather Balloon Radiosonde",
+        band: "UHF",
+        radarBand: "UHF",
+        freq: "400.0 – 406.0 MHz (e.g. 403.500 MHz)",
+        freqHz: 403500000,
+        mode: "Stratospheric Upper-Air Meteorological Telemetry",
+        modulation: "GFSK (4800 bps continuous frame)",
+        bandwidth: "10 kHz",
+        categories: ["Utility", "Digital"],
+        wfType: "rtty_fsk",
+        decoder: "radiosonde_auto_rx / RS41 Tracker / SondeHub",
+        antenna: "Quarter-wave wire (~17.7 cm) dangling below styrofoam payload",
+        bounce: "Direct Line-of-Sight up to 350 km from 35 km (115,000 ft) burst altitude",
+        desc: "Launched twice daily from 800+ global weather stations, transmitting continuous GPS wind profiles, temperature, and humidity from the stratosphere."
+      },
+      {
+        name: "Cospas-Sarsat EPIRB / ELT / PLB Distress Beacon",
+        band: "UHF",
+        radarBand: "UHF",
+        freq: "406.025 – 406.076 MHz",
+        freqHz: 406028000,
+        mode: "Global Satellite Search & Rescue Alert",
+        modulation: "BPSK (±1.1 rad phase shift, 400 bps, 0.5s 5W burst every 50s)",
+        bandwidth: "3 kHz",
+        categories: ["Satellite", "Marine", "Aviation", "Digital"],
+        wfType: "adsb_ppm",
+        decoder: "MultiPSK EPIRB / SARops",
+        antenna: "Flexible quarter-wave whip (~17.5 cm) on life raft or aircraft",
+        bounce: "Direct Uplink to LEO/MEO/GEO Cospas-Sarsat Satellites",
+        desc: "Emergency life-saving beacon transmitting a 5-Watt digital burst every 50 seconds with a 160 ms unmodulated carrier preamble (for Doppler positioning) followed by hex vessel ID and GPS coordinates."
+      },
+      {
+        name: "DMR (Digital Mobile Radio - Tier II / III)",
+        band: "UHF",
+        radarBand: "UHF",
+        freq: "400 – 470 MHz (e.g. 446.500 MHz)",
+        freqHz: 446500000,
+        mode: "Commercial & Amateur 2-Slot TDMA Digital Voice",
+        modulation: "4-FSK (9600 bps, 4800 Baud, two 30ms TDMA slots)",
+        bandwidth: "12.5 kHz",
+        categories: ["Commercial", "Amateur", "Trunked", "Digital"],
+        wfType: "p25_c4fm",
+        decoder: "DSD+ / SDRTrunk / OpenGD77",
+        antenna: "UHF quarter-wave whip (~16.0 cm)",
+        bounce: "Line-of-Sight & Worldwide BrandMeister Internet-Linked Repeaters",
+        desc: "Most popular commercial and amateur digital two-way standard, multiplexing two independent voice conversations inside a single 12.5 kHz channel using 30 ms TDMA bursts."
+      },
+      {
+        name: "LoRa / LoRaWAN & Meshtastic Off-Grid Mesh",
+        band: "UHF",
+        radarBand: "UHF",
+        freq: "433 MHz / 868 MHz (EU) / 915 MHz (Americas/AU)",
+        freqHz: 915000000,
+        mode: "LPWAN IoT & Encrypted Off-Grid Text Mesh",
+        modulation: "CSS (Chirp Spread Spectrum, SF7–SF12)",
+        bandwidth: "125 kHz / 250 kHz / 500 kHz",
+        categories: ["Digital", "Amateur", "Commercial"],
+        wfType: "lora_css",
+        decoder: "gr-lora_sdr / Meshtastic ESP32/nRF52 Node",
+        antenna: "Half-wave dipole (~15.6 cm at 915 MHz)",
+        bounce: "Line-of-Sight + Mountain Mesh Relay (decodes at -20 dB SNR!)",
+        desc: "Unmistakable razor-sharp diagonal up-chirp preamble ramps followed by inverted down-chirp sync words and fragmented data chirps across a 125 or 250 kHz passband."
+      },
+      {
+        name: "DVB-T2 / ATSC 3.0 Digital Terrestrial Television",
+        band: "UHF",
+        radarBand: "UHF",
+        freq: "470 – 698 MHz (e.g. 578.0 MHz UHF Ch 34)",
+        freqHz: 578000000,
+        mode: "Digital UHD Broadcast Television",
+        modulation: "COFDM (256-QAM / 1024-QAM / 4096-QAM, LDPC)",
+        bandwidth: "6 MHz (Americas) / 8 MHz (Europe/Asia)",
+        categories: ["Commercial", "Digital"],
+        wfType: "lte_5g_ofdma",
+        decoder: "DVB-T2 / ATSC 3.0 Tuner / SDRangel DVB Demod",
+        antenna: "Rooftop UHF Yagi or Log-Periodic array (~24.6 cm dipole element)",
+        bounce: "Line-of-Sight (60–120 km)",
+        desc: "Massive 6 MHz or 8 MHz wide rectangular wall of up to 32,768 orthogonal subcarriers delivering 35–50 Mbps of 4K HEVC broadcast video."
+      },
+      {
+        name: "GSM (2G Global System for Mobile Communications)",
+        band: "UHF",
+        radarBand: "UHF",
+        freq: "850 / 900 / 1800 / 1900 MHz (e.g. 945.0 MHz)",
+        freqHz: 945000000,
+        mode: "Cellular Voice, SMS & M2M IoT",
+        modulation: "GMSK (270.833 kbps, 8-slot TDMA + Slow FHSS)",
+        bandwidth: "200 kHz",
+        categories: ["Commercial", "Digital"],
+        wfType: "tetra_pi4",
+        decoder: "gr-gsm / Wireshark / OsmocomBB",
+        antenna: "Internal phone PIFA (~7.5 cm quarter-wave at 945 MHz)",
+        bounce: "Urban Multipath up to 35 km TDMA timing-advance limit",
+        desc: "200 kHz wide Gaussian MSK channel with a continuous BCCH beacon carrier and 8 time-division slots."
+      },
+      {
+        name: "ADS-B & Mode-S Aviation Transponder (1090 MHz)",
+        band: "UHF",
+        radarBand: "L-Band",
+        freq: "1,090.0 MHz (Downlink) / 1,030.0 MHz (Radar Interrogation)",
+        freqHz: 1090000000,
+        mode: "Real-Time Aircraft GPS Position, Altitude & Velocity Squitter",
+        modulation: "PPM (Pulse Position Modulation, 1 Mbps, 112-bit Extended Squitter)",
+        bandwidth: "2.0 MHz – 4.0 MHz",
+        categories: ["Aviation", "Navigation", "Radar", "Digital"],
+        wfType: "adsb_ppm",
+        decoder: "dump1090-fa / readsb / tar1090 / Flightradar24",
+        antenna: "Quarter-wave stub (~6.5 cm) on aircraft belly; 1090 MHz collinear Rx",
+        bounce: "Line-of-Sight up to 250 NM + Space-based ADS-B LEO Satellites",
+        desc: "Twice per second, aircraft broadcast a 120-microsecond pulse burst containing ICAO hex address, callsign, altitude, speed, and GPS coordinates. Appears as horizontal impulse flashes across a 2 MHz span."
+      },
+      {
+        name: "NATO Link 16 (JTIDS / MIDS Tactical Data Link)",
+        band: "UHF",
+        radarBand: "L-Band",
+        freq: "960 – 1,215 MHz (51 hopping frequencies)",
+        freqHz: 1050000000,
+        mode: "Military Jam-Resistant Tactical Situation Network",
+        modulation: "MSK + Cyclic Code Shift Keying + Fast FHSS (77,000 hops/sec)",
+        bandwidth: "3 MHz per pulse across 255 MHz band",
+        categories: ["Military", "Aviation", "Digital"],
+        wfType: "link16_fhss",
+        decoder: "Encrypted Military MIDS Terminal (AN/USQ-140)",
+        antenna: "L-Band blade antenna (~6.8 cm quarter-wave) on fighter jets/warships",
+        bounce: "Line-of-Sight (300 NM) + Satellite Extension (JREAP)",
+        desc: "Hops across 51 channels between 960 and 1215 MHz over 77,000 times per second, appearing on a wideband SDR waterfall as a dense snowstorm of 13-microsecond pulse doublets."
+      },
+      {
+        name: "GPS L1 C/A & Galileo E1 / GLONASS Navigation",
+        band: "UHF",
+        radarBand: "L-Band",
+        freq: "1,575.42 MHz (GPS L1 / Galileo E1)",
+        freqHz: 1575420000,
+        mode: "Global Navigation Satellite System (GNSS)",
+        modulation: "BPSK DSSS (1.023 Mchip/s Gold Code) + BOC(1,1)",
+        bandwidth: "2.046 MHz (C/A main lobe) / 24 MHz total",
+        categories: ["Satellite", "Navigation", "Military", "Digital"],
+        wfType: "tetra_pi4",
+        decoder: "GNSS-SDR / u-blox Receiver",
+        antenna: "Right-Hand Circularly Polarized (RHCP) ceramic patch (~2.5 cm square)",
+        bounce: "Direct Space-to-Earth from 20,200 km Medium Earth Orbit (MEO)",
+        desc: "Direct-Sequence Spread Spectrum atomic timing signals arriving ~20 dB below thermal noise floor, extracted via PRN code correlation gain."
+      },
+      {
+        name: "Inmarsat-C / Aero & Iridium Satellite Downlinks",
+        band: "UHF",
+        radarBand: "L-Band",
+        freq: "1,537.7 MHz (Inmarsat-C) & 1,626.0 MHz (Iridium)",
+        freqHz: 1545000000,
+        mode: "Global Maritime SafetyNET, Aero ACARS & Satellite Phone",
+        modulation: "BPSK (1200 Symbols/s Inmarsat) / DE-QPSK TDMA (Iridium)",
+        bandwidth: "2.5 kHz (Inmarsat-C) / 41.67 kHz (Iridium)",
+        categories: ["Satellite", "Marine", "Aviation", "Digital"],
+        wfType: "p25_c4fm",
+        decoder: "SatDump / Scytale-C / JAERO / iridium-toolkit",
+        antenna: "RHCP patch or helical antenna (~9.2 cm wavelength)",
+        bounce: "GEO (35,786 km Inmarsat) or LEO (780 km Iridium constellation)",
+        desc: "Delivers ocean-wide GMDSS SafetyNET warnings, cockpit satellite ACARS, and pole-to-pole satellite pager/voice bursts."
+      },
+      {
+        name: "NOAA / MetOp / FengYun HRPT Weather Satellite",
+        band: "UHF",
+        radarBand: "L-Band",
+        freq: "1,698.0 / 1,702.5 / 1,707.0 MHz",
+        freqHz: 1702500000,
+        mode: "High-Resolution Picture Transmission Downlink",
+        modulation: "BPSK / QPSK (665.4 kbps to 3.5 Mbps)",
+        bandwidth: "3.0 MHz – 4.5 MHz",
+        categories: ["Satellite", "Utility", "Digital"],
+        wfType: "tetra_pi4",
+        decoder: "SatDump",
+        antenna: "80cm–1.2m parabolic dish with 1.7 GHz RHCP helical feed",
+        bounce: "Direct Space-to-Earth Line-of-Sight",
+        desc: "Full-resolution multispectral radiometer imagery downlink from polar weather satellites."
+      },
+      {
+        name: "4G LTE & 5G NR (New Radio) Cellular Downlink",
+        band: "UHF",
+        radarBand: "S-Band",
+        freq: "600 MHz – 3.8 GHz (e.g. 2,140 MHz / 3,500 MHz n78)",
+        freqHz: 2140000000,
+        mode: "Global Mobile Broadband Network",
+        modulation: "OFDMA (QPSK / 16-QAM / 64-QAM / 256-QAM, 15/30 kHz SCS)",
+        bandwidth: "10 / 20 MHz (LTE) up to 100 MHz (5G NR)",
+        categories: ["Commercial", "Digital"],
+        wfType: "lte_5g_ofdma",
+        decoder: "srsRAN / LTE-Cell-Scanner / Wireshark",
+        antenna: "4x4 MIMO internal smartphone antennas (~3.3 cm quarter-wave at 2.1 GHz)",
+        bounce: "Line-of-Sight + Non-Line-of-Sight Urban Multipath (exploited by MIMO)",
+        desc: "Rectangular OFDMA spectral grid dynamically scheduling Physical Resource Blocks (PRBs) every 1-millisecond subframe around a center DC null carrier."
+      },
+      {
+        name: "Bluetooth / BLE (Bluetooth Low Energy)",
+        band: "UHF",
+        radarBand: "S-Band",
+        freq: "2,402 – 2,480 MHz (2.4 GHz ISM Band)",
+        freqHz: 2440000000,
+        mode: "Short-Range Personal Area Network",
+        modulation: "GFSK / π/4-DQPSK (1600 hops/s Classic FHSS or 40-ch BLE)",
+        bandwidth: "1 MHz (Classic) / 2 MHz (BLE) across 80 MHz span",
+        categories: ["Commercial", "Digital"],
+        wfType: "bt_ble_fhss",
+        decoder: "Ubertooth One / Sniffle / Wireshark",
+        antenna: "PCB Inverted-F trace antenna (~2.9 cm quarter-wave)",
+        bounce: "Indoor Multipath Reflections (10–100m)",
+        desc: "Rapidly hops 1 MHz or 2 MHz GFSK packets across 2402–2480 MHz 1,600 times per second to dodge 2.4 GHz Wi-Fi OFDM bursts."
+      },
+
+      // SHF & EHF & THF SIGNALS
+      {
+        name: "S-Band Doppler Weather Radar (NEXRAD WSR-88D)",
+        band: "SHF",
+        radarBand: "S-Band",
+        freq: "2,700 – 3,000 MHz (e.g. 2,850 MHz)",
+        freqHz: 2850000000,
+        mode: "Dual-Polarization Meteorological Doppler Radar",
+        modulation: "High-Power Pulsed RF (750 kW peak, 1.57 µs / 4.7 µs pulses)",
+        bandwidth: "1.0 MHz – 2.0 MHz",
+        categories: ["Radar", "Utility"],
+        wfType: "adsb_ppm",
+        decoder: "RadarScope / Py-ART (Level II/III NEXRAD Data)",
+        antenna: "8.5-meter parabolic dish inside white fiberglass radome (0.95° beamwidth)",
+        bounce: "Tropospheric Line-of-Sight out to 460 km (resists rain attenuation)",
+        desc: "Transmits 750-kilowatt horizontal and vertical polarized pulses to measure precipitation reflectivity, tornado wind velocity couplets, and hail size."
+      },
+      {
+        name: "Wi-Fi 4 / 5 / 6 / 6E / 7 (IEEE 802.11 OFDM)",
+        band: "SHF",
+        radarBand: "C-Band",
+        freq: "2.4 GHz / 5.15–5.85 GHz / 5.925–7.125 GHz",
+        freqHz: 5800000000,
+        mode: "High-Speed Wireless Local Area Network",
+        modulation: "OFDM / OFDMA (BPSK up to 4096-QAM, MU-MIMO)",
+        bandwidth: "20 / 40 / 80 / 160 / 320 MHz",
+        categories: ["Commercial", "Digital"],
+        wfType: "lte_5g_ofdma",
+        decoder: "gr-ieee802-11 / Wireshark Monitor Mode",
+        antenna: "Dual-band dipole paddles (~2.4 cm half-wave at 5.8 GHz)",
+        bounce: "Indoor Multipath Reflections",
+        desc: "High-speed packetized OFDM bursts with a clear center DC null subcarrier."
+      },
+      {
+        name: "Ultra-Wideband (UWB - IEEE 802.15.4z / AirTag)",
+        band: "SHF",
+        radarBand: "C-Band",
+        freq: "6,489.6 MHz (Ch 5) & 7,987.2 MHz (Ch 9)",
+        freqHz: 6489600000,
+        mode: "Centimeter-Precision Time-of-Flight Ranging",
+        modulation: "BPM-BPSK Impulse Radio (2-nanosecond pulses)",
+        bandwidth: "499.2 MHz",
+        categories: ["Commercial", "Navigation", "Digital"],
+        wfType: "loran_pulse",
+        decoder: "Qorvo DW3000 / Apple U1/U2 Ranging Transceiver",
+        antenna: "Broadband planar monopole (< 1.5 cm)",
+        bounce: "Direct Line-of-Sight Time-of-Flight (resolves first path ahead of indoor echoes)",
+        desc: "Fires 2-nanosecond impulses spanning 500 MHz of spectrum to measure physical distance between devices down to ±5 cm."
+      },
+      {
+        name: "Marine X-Band Navigation Radar (9.4 GHz)",
+        band: "SHF",
+        radarBand: "X-Band",
+        freq: "9,300 – 9,500 MHz (9.41 GHz standard)",
+        freqHz: 9410000000,
+        mode: "Maritime Surface Search & Collision Avoidance Radar",
+        modulation: "Pulsed Magnetron or Solid-State FMCW Chirp Compression",
+        bandwidth: "10 MHz – 40 MHz",
+        categories: ["Radar", "Marine", "Navigation"],
+        wfType: "oth_fmcw",
+        decoder: "Shipboard ARPA Radar Display / SART Transponder",
+        antenna: "Rotating horizontal slotted waveguide array (1.2m–2.4m wide; λ = 3.18 cm)",
+        bounce: "Surface Line-of-Sight (24–96 NM) + Evaporation Ducting",
+        desc: "Rotates at 24–48 RPM atop ships, illuminating coastlines, buoys, rain squalls, and vessels with a 1.2° horizontal fan beam."
+      },
+      {
+        name: "Starlink LEO Broadband & DVB-S2X Ku-Band Downlink",
+        band: "SHF",
+        radarBand: "Ku-Band",
+        freq: "10.70 – 12.70 GHz (eight 240 MHz Ku-Band channels)",
+        freqHz: 11700000000,
+        mode: "Low-Earth Orbit Phased-Array Satellite Internet",
+        modulation: "OFDM (1024 Subcarriers, 4-QAM to 64-QAM) / APSK (DVB-S2X)",
+        bandwidth: "240 MHz per beam",
+        categories: ["Satellite", "Commercial", "Digital"],
+        wfType: "lte_5g_ofdma",
+        decoder: "Starlink Phased-Array Terminal / Universal Ku LNB + SDR",
+        antenna: "1,280-element electronically steered phased array ('Dishy', λ/2 = 1.28 cm)",
+        bounce: "Direct Space-to-Earth from 550 km LEO orbit",
+        desc: "Delivers 100–400 Mbps internet via electronically steered Ku-band beams tracking satellites moving across the sky at 7.6 km/s."
+      },
+      {
+        name: "60 GHz WiGig (IEEE 802.11ad/ay) & Gesture Radar",
+        band: "EHF",
+        radarBand: "V / W",
+        freq: "57.0 – 71.0 GHz (60.48 GHz Ch 2)",
+        freqHz: 60480000000,
+        mode: "Multi-Gigabit Short-Range & Micro-Gesture Radar",
+        modulation: "Single-Carrier / OFDM (2.16 GHz channel) & FMCW (Google Soli)",
+        bandwidth: "2,160 MHz",
+        categories: ["Commercial", "Radar", "Digital"],
+        wfType: "lte_5g_ofdma",
+        decoder: "802.11ay Baseband / Infineon BGT60TR13C Radar IC",
+        antenna: "On-chip Antenna-in-Package (AiP) phased array (λ/2 = 2.48 mm!)",
+        bounce: "Room-confined Line-of-Sight (absorbed by atmospheric O₂ at ~15 dB/km)",
+        desc: "Operates right on the 60 GHz atmospheric oxygen absorption peak, allowing multi-gigabit wireless docking and sub-millimeter finger gesture radar without leaking outside the room."
+      },
+      {
+        name: "77–81 GHz Automotive ADAS & Autonomous FMCW Radar",
+        band: "EHF",
+        radarBand: "V / W",
+        freq: "76.0 – 81.0 GHz (77.0 GHz Long-Range / 79.0 GHz Short-Range)",
+        freqHz: 77000000000,
+        mode: "Automotive Collision Avoidance & Adaptive Cruise Control",
+        modulation: "Fast-Chirp MIMO FMCW (up to 4 GHz sweep in 40 µs)",
+        bandwidth: "500 MHz – 4,000 MHz",
+        categories: ["Radar", "Commercial"],
+        wfType: "oth_fmcw",
+        decoder: "TI AWR1843 / NXP TEF82xx Monolithic Microwave IC (MMIC)",
+        antenna: "Printed microstrip patch array behind bumper (λ/2 = 1.95 mm!)",
+        bounce: "Line-of-Sight out to 250m (penetrates dense fog, snow, spray, and dust)",
+        desc: "Sweeps up to 4 GHz of millimeter-wave chirp bandwidth to measure the exact range (down to 4 cm), relative velocity, and azimuth angle of vehicles and pedestrians."
+      },
+      {
+        name: "IEEE 802.15.3d 6G Terahertz & Sub-mm Astronomy",
+        band: "THF",
+        radarBand: "",
+        freq: "275 – 325 GHz (300 GHz Center) & 345 GHz (EHT VLBI)",
+        freqHz: 300000000000,
+        mode: "100+ Gbps Terahertz Wireless & Black Hole Interferometry",
+        modulation: "Single-Carrier QPSK / 64-QAM (up to 69 GHz channel bandwidth)",
+        bandwidth: "2.16 GHz – 69.12 GHz",
+        categories: ["Commercial", "Satellite", "Digital"],
+        wfType: "lte_5g_ofdma",
+        decoder: "InP / SiGe Terahertz Heterodyne Receiver & Cryo SIS Mixer",
+        antenna: "Micromachined silicon corrugated horn or lens (λ/2 = 0.50 mm!)",
+        bounce: "Short indoor pencil beam or high-altitude dry mountain / space vacuum",
+        desc: "Operates at 0.3 Terahertz (1 mm wavelength), enabling 100 Gbps point-to-point wireless links and the Event Horizon Telescope's 345 GHz imaging of supermassive black holes."
+      }
+    ];
+
+    /***************************************************************************
+     * 4. MODULATION REFERENCE ENCYCLOPEDIA (CLICKABLE TO FILTER SIGNALS)
+     ***************************************************************************/
+    const MODULATION_GUIDE = [
+      { code: "CW / OOK", filterTerm: "OOK", desc: "On-Off Keyed Carrier: Morse telegraphy (CW), 125 kHz RFID, and NDB sidebands." },
+      { code: "AM / MCW", filterTerm: "AM", desc: "Amplitude Modulation: Mediumwave/Shortwave broadcast, Civil Airband, VOR, and NDB." },
+      { code: "SSB (USB / LSB)", filterTerm: "USB", desc: "Suppressed-carrier Single Sideband: HF voice, UVB-76 Buzzer, and military HFGCS." },
+      { code: "WFM / NFM", filterTerm: "WFM", desc: "Frequency Modulation: Commercial FM Stereo + 57 kHz RDS, NOAA APT, and VHF voice." },
+      { code: "FSK / SITOR / RTTY", filterTerm: "FSK", desc: "2-Tone Frequency Shift Keying: Baudot RTTY, NAVTEX 518 kHz, and POCSAG pagers." },
+      { code: "MSK / GMSK", filterTerm: "MSK", desc: "Minimum / Gaussian Shift Keying: 24 kHz Submarine VLF, Maritime AIS, GSM, and ACARS." },
+      { code: "4-FSK / C4FM / 8-FSK", filterTerm: "FSK", desc: "Multi-level FSK: FT8 (8-GFSK), P25 (C4FM), DMR (4-FSK), WSPR, and 2G ALE (8-FSK)." },
+      { code: "BPSK / QPSK / DQPSK", filterTerm: "PSK", desc: "Phase Shift Keying: TETRA (π/4-DQPSK), VDL2 (D8PSK), HFDL, STANAG 4285, and EPIRB." },
+      { code: "COFDM / OFDMA", filterTerm: "OFDM", desc: "Orthogonal Subcarriers: 4G LTE, 5G NR, Wi-Fi 6/7, Starlink, DVB-T2, DAB+, and DRM." },
+      { code: "FMCW / CSS Chirp", filterTerm: "Chirp", desc: "Frequency Swept Chirps: OTH Skywave Radar, CODAR, 77 GHz Auto Radar, and LoRa Mesh." },
+      { code: "FHSS / DSSS / PPM", filterTerm: "FHSS", desc: "Spread Spectrum & Pulses: NATO Link 16, Bluetooth, GPS L1 DSSS, and 1090 MHz ADS-B." }
+    ];
+
+    /***************************************************************************
+     * 5. UNIFIED APPLICATION STATE & CASCADING CONTROLLER
+     ***************************************************************************/
+    let activeBandId = "HF";
+    let activeRadarLetter = "HF";
+    let activeCategory = "HF";
+    let selectedSignal = SIGID_DATABASE.find(s => s.name.includes("FT8")) || SIGID_DATABASE[0];
+
+    // Waterfall & Audio State
+    let wfZoom = 1.0;
+    let wfGain = 1.1;
+    let wfPalette = "sdrsharp";
+    let wfTick = 0;
+    let audioCtx = null;
+    let isAudioPlaying = false;
+    let audioInterval = null;
+    let activeAudioNodes = [];
+
+    function initApp() {
+      document.getElementById("totalSignalsStat").textContent = SIGID_DATABASE.length;
+
+      renderITUSpectrumStrip();
+      renderIEEERadarStrip();
+      renderCategoryFilterBar();
+      renderModulationGuide();
+      setupWaterfallControls();
+      setupCalculatorListeners();
+
+      // Search box live filter
+      const searchInput = document.getElementById("signalSearchInput");
+      searchInput.addEventListener("input", () => {
+        renderSignalGrid();
+      });
+
+      // Trigger full initial Top-to-Bottom Cascade on HF
+      cascadeSelectITUBand("HF");
+      startWaterfallLoop();
+    }
+
+    /***************************************************************************
+     * 6. MASTER CASCADE FUNCTIONS (TOP-TO-BOTTOM SYNCHRONIZATION)
+     ***************************************************************************/
+    function cascadeSelectITUBand(bandId) {
+      activeBandId = bandId;
+      const band = ITU_BANDS.find(b => b.id === bandId);
+      if (!band) return;
+
+      // 1. Update ITU Band Tile Highlight
+      document.querySelectorAll(".band-tile").forEach(el => el.classList.remove("active"));
+      const tile = document.getElementById(`tile-${bandId}`);
+      if (tile) tile.classList.add("active");
+
+      // 2. Synchronize IEEE Radar Strip
+      activeRadarLetter = band.linkedRadarLetters.length > 0 ? band.linkedRadarLetters[0] : "";
+      updateRadarStripSync(band);
+
+      // 3. Update Band Physics, Accordion & Atmospheric Bounce SVG
+      renderBandDeepDive(band);
+      renderPropagationDiagram(band);
+
+      // 4. Filter SigIDWiki Grid to this ITU Band & Auto-Select Flagship Signal
+      activeCategory = bandId;
+      document.getElementById("signalSearchInput").value = "";
+      renderCategoryFilterBar();
+
+      const flagship = SIGID_DATABASE.find(s => s.name === band.flagshipSignal) ||
+                       SIGID_DATABASE.find(s => s.band === bandId) ||
+                       SIGID_DATABASE[0];
+
+      // 5. Cascade into Signal Inspector, Waterfall & Antenna Calculator
+      cascadeSelectSignal(flagship, false);
+      renderSignalGrid();
+      updateCascadeSyncBar();
+    }
+
+    function cascadeSelectRadarBand(idx) {
+      const r = IEEE_RADAR_BANDS[idx];
+      if (!r) return;
+
+      activeRadarLetter = r.letter;
+      activeBandId = r.parentItu;
+
+      // 1. Sync Parent ITU Band Tile
+      document.querySelectorAll(".band-tile").forEach(el => el.classList.remove("active"));
+      const tile = document.getElementById(`tile-${activeBandId}`);
+      if (tile) tile.classList.add("active");
+
+      const parentBand = ITU_BANDS.find(b => b.id === activeBandId);
+      if (parentBand) {
+        renderBandDeepDive(parentBand);
+        renderPropagationDiagram(parentBand);
+      }
+
+      // 2. Highlight clicked Radar Pill & Update Radar Inspector
+      document.querySelectorAll(".radar-pill").forEach((el, i) => {
+        el.classList.toggle("active", i === idx);
+      });
+      document.getElementById("radarSubLabel").textContent = `Active IEEE Radar Filter (Parent ITU: ${r.parentItu})`;
+      document.getElementById("radarTitle").textContent = `${r.letter} (${r.range}) • Wavelength: ${r.wave}`;
+      document.getElementById("radarDesc").textContent = r.desc;
+
+      // 3. Filter SigIDWiki Grid
+      activeCategory = r.parentItu;
+      document.getElementById("signalSearchInput").value = "";
+      renderCategoryFilterBar();
+
+      const flagship = SIGID_DATABASE.find(s => s.name === r.flagshipSignal) ||
+                       SIGID_DATABASE.find(s => s.radarBand === r.letter) ||
+                       SIGID_DATABASE.find(s => s.band === r.parentItu);
+
+      if (flagship) {
+        cascadeSelectSignal(flagship, false);
+      }
+      renderSignalGrid();
+      updateCascadeSyncBar();
+    }
+
+    function cascadeSelectSignal(sig, syncTopIfDifferent = true) {
+      if (!sig) return;
+      selectedSignal = sig;
+
+      if (syncTopIfDifferent && sig.band !== activeBandId) {
+        activeBandId = sig.band;
+        document.querySelectorAll(".band-tile").forEach(el => el.classList.remove("active"));
+        const tile = document.getElementById(`tile-${activeBandId}`);
+        if (tile) tile.classList.add("active");
+
+        const band = ITU_BANDS.find(b => b.id === activeBandId);
+        if (band) {
+          activeRadarLetter = sig.radarBand || (band.linkedRadarLetters[0] || "");
+          updateRadarStripSync(band);
+          renderBandDeepDive(band);
+          renderPropagationDiagram(band);
+        }
+      }
+
+      document.getElementById("wfSignalTitle").textContent = sig.name.toUpperCase();
+      document.getElementById("wfEngineBadge").textContent = `DSP: ${sig.wfType}`;
+
+      const calcDims = computeAntennaDimensions(sig.freqHz);
+
+      document.getElementById("inspectorDetails").innerHTML = `
+        <div class="flex flex-wrap justify-between items-start gap-2 mb-1.5">
+          <h3 class="text-base font-bold text-sky-400">${sig.name}</h3>
+          <span class="px-2 py-0.5 rounded bg-sky-950 border border-sky-700 text-sky-300 font-mono text-xs">${sig.band}${sig.radarBand ? ' • ' + sig.radarBand : ''}</span>
+        </div>
+        <p class="text-xs text-slate-300 mb-3 leading-relaxed">${sig.desc}</p>
+
+        <table class="inspector-specs-table">
+          <tr><th>Standard Frequency</th><td class="text-amber-300 font-bold">${sig.freq}</td></tr>
+          <tr><th>Mode &amp; Service</th><td>${sig.mode}</td></tr>
+          <tr><th>Modulation &amp; Encoding</th><td class="text-sky-300">${sig.modulation}</td></tr>
+          <tr><th>Occupied Bandwidth</th><td>${sig.bandwidth}</td></tr>
+          <tr><th>Atmospheric Bounce</th><td class="text-emerald-400">${sig.bounce}</td></tr>
+          <tr><th>Real-World Antenna</th><td>${sig.antenna}</td></tr>
+          <tr><th>Calculated λ/2 &amp; λ/4</th><td class="text-purple-300">λ/2 Dipole: ${calcDims.halfDipoleStr} • λ/4 Whip: ${calcDims.quarterWhipStr}</td></tr>
+          <tr><th>SDR Decoder Software</th><td class="text-slate-300">${sig.decoder}</td></tr>
+        </table>
+      `;
+
+      if (isAudioPlaying) {
+        stopSignalAudio();
+        startSignalAudio();
+      }
+
+      setCalculatorFrequencyHz(sig.freqHz, `Synced to Signal: ${sig.name}`);
+      updateCascadeSyncBar();
+    }
+
+    function updateRadarStripSync(band) {
+      const linked = band.linkedRadarLetters || [];
+      IEEE_RADAR_BANDS.forEach((r, idx) => {
+        const pill = document.getElementById(`radar-pill-${idx}`);
+        if (!pill) return;
+        const isMatch = linked.includes(r.letter);
+        pill.classList.toggle("itu-linked", isMatch);
+        pill.classList.toggle("itu-dimmed", linked.length > 0 && !isMatch);
+        pill.classList.toggle("active", r.letter === activeRadarLetter);
+      });
+
+      const matchedRadar = IEEE_RADAR_BANDS.find(r => r.letter === activeRadarLetter);
+      if (matchedRadar) {
+        document.getElementById("radarSubLabel").textContent = `Overlapping IEEE Designation for ${band.id}`;
+        document.getElementById("radarTitle").textContent = `${matchedRadar.letter} (${matchedRadar.range}) • Wavelength: ${matchedRadar.wave}`;
+        document.getElementById("radarDesc").textContent = matchedRadar.desc;
+      } else {
+        document.getElementById("radarSubLabel").textContent = `Sub-Radar / Terahertz Regime (${band.id})`;
+        document.getElementById("radarTitle").textContent = `No Standard IEEE Radar Letter (${band.id}: ${band.range})`;
+        document.getElementById("radarDesc").textContent = band.radarUse;
+      }
+    }
+
+    function updateCascadeSyncBar() {
+      const band = ITU_BANDS.find(b => b.id === activeBandId);
+      if (band) {
+        document.getElementById("syncItuLabel").textContent = `${band.id} (${band.range})`;
+        document.getElementById("syncBounceLabel").textContent = band.bounceShort;
+      }
+      document.getElementById("syncRadarLabel").textContent = activeRadarLetter ? `${activeRadarLetter} Radar/Sat` : `Non-Radar (${activeBandId})`;
+      if (selectedSignal) {
+        document.getElementById("syncSignalLabel").textContent = `${selectedSignal.name.slice(0, 28)} (${formatFreqShort(selectedSignal.freqHz)})`;
+        const dims = computeAntennaDimensions(selectedSignal.freqHz);
+        document.getElementById("syncAntennaLabel").textContent = dims.halfDipoleStr;
+      }
+    }
+
+    /***************************************************************************
+     * 7. RENDER ITU & IEEE RADAR STRIPS + DEEP-DIVE PANEL + PROPAGATION SVG
+     ***************************************************************************/
+    function renderITUSpectrumStrip() {
+      const container = document.getElementById("ituSpectrumStrip");
+      container.innerHTML = ITU_BANDS.map(band => `
+        <div class="band-tile ${band.id === activeBandId ? 'active' : ''}"
+             id="tile-${band.id}"
+             style="background: ${band.color}; --tile-glow: ${band.glow};"
+             onclick="cascadeSelectITUBand('${band.id}')">
+          <div>
+            <div class="itu-num">${band.ituNum}</div>
+            <div class="band-abbr">${band.id}</div>
+            <div class="band-range">${band.range}</div>
+          </div>
+          <div>
+            <div class="band-wave">λ: ${band.wavelength}</div>
+            <div class="bounce-badge">${band.bounceShort}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderIEEERadarStrip() {
+      const container = document.getElementById("ieeeRadarStrip");
+      container.innerHTML = IEEE_RADAR_BANDS.map((r, idx) => `
+        <div class="radar-pill" id="radar-pill-${idx}" onclick="cascadeSelectRadarBand(${idx})">
+          <div class="r-letter">
+            <span>${r.letter}</span>
+            <span class="text-[10px] px-1 rounded bg-slate-800 text-slate-300">${r.parentItu}</span>
+          </div>
+          <div class="r-freq">${r.range}</div>
+          <div class="r-use">λ: ${r.wave}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderBandDeepDive(band) {
+      const panel = document.getElementById("bandDetailsPanel");
+      const linkedBadges = band.linkedRadarLetters.length
+        ? band.linkedRadarLetters.map(l => `<span class="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/50 text-amber-300 text-xs font-mono">${l}</span>`).join(" ")
+        : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-xs font-mono">Sub-HF / THz Regime</span>`;
+
+      panel.innerHTML = `
+        <div class="flex flex-wrap justify-between items-start gap-3 pb-3 mb-3 border-b border-slate-800">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-2.5 py-1 rounded-lg font-extrabold text-lg" style="background:${band.color}">${band.id}</span>
+              <h3 class="text-lg font-extrabold text-white">${band.name}</h3>
+              ${linkedBadges}
+            </div>
+            <p class="text-xs text-slate-400 mt-1 font-mono">
+              ${band.ituNum} • Range: <strong class="text-slate-200">${band.range}</strong> • Free-Space Wavelength (λ): <strong class="text-sky-400">${band.wavelength}</strong>
+            </p>
+          </div>
+        </div>
+
+        <div class="band-meta-grid">
+          <div class="meta-box">
+            <div class="m-label">Atmospheric / Ionospheric Bounce</div>
+            <div class="m-val" style="color: var(--emerald);">${band.canBounce}</div>
+            <div class="m-desc">${band.propagation}</div>
+          </div>
+          <div class="meta-box">
+            <div class="m-label">Physical Antenna Sizing &amp; Architecture</div>
+            <div class="m-val" style="color: var(--accent);">λ = ${band.wavelength}</div>
+            <div class="m-desc">${band.antennaInfo}</div>
+          </div>
+          <div class="meta-box">
+            <div class="m-label">Radar &amp; Remote Sensing Capabilities</div>
+            <div class="m-val" style="color: var(--amber);">Radar Applications</div>
+            <div class="m-desc">${band.radarUse}</div>
+          </div>
+          <div class="meta-box">
+            <div class="m-label">Global Telecom, Navigation &amp; Utility</div>
+            <div class="m-val" style="color: var(--purple);">Core Allocations</div>
+            <div class="m-desc">${band.telecomUse}</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-bottom:0.45rem;">
+          <h2 style="font-size:0.86rem;">Expandable Sub-Band Allocations &amp; Clickable Signal Links (${band.id})</h2>
+          <span class="sub">Click any technology tag to load its live SDR waterfall &amp; antenna dimensions</span>
+        </div>
+
+        <div class="subband-list">
+          ${band.subbands.map((sb, i) => `
+            <details class="subband-item" ${i === 0 ? 'open' : ''}>
+              <summary>
+                <span><span class="subband-freq">[${sb.freq}]</span> ${sb.title}</span>
+                <span class="text-sky-400 text-xs font-mono">▼ Layer</span>
+              </summary>
+              <div class="subband-body">
+                <p>${sb.desc}</p>
+                <div class="tech-tags">
+                  ${sb.tech.map(t => `<span class="tech-tag" onclick="jumpToSignalByName('${t.replace(/'/g, "\\'")}')">⚡ ${t}</span>`).join("")}
+                </div>
+              </div>
+            </details>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderPropagationDiagram(band) {
+      document.getElementById("propBandLabel").textContent = `${band.id} (${band.range})`;
+      document.getElementById("propExplanationBox").innerHTML = `
+        <div class="m-label">Propagation Physics Summary (${band.id})</div>
+        <div class="m-val" style="color: var(--emerald);">${band.bounceShort}</div>
+        <div class="m-desc">${band.propagation}</div>
+      `;
+
+      const svg = document.getElementById("propSvg");
+      let pathsHtml = "";
+
+      if (band.bounceType === "waveguide") {
+        pathsHtml = `
+          <path d="M 70 168 Q 150 85 230 168 T 390 168 T 545 168" fill="none" stroke="#c084fc" stroke-width="3" stroke-dasharray="6 4"/>
+          <path d="M 70 168 Q 280 190 520 176" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+          <text x="300" y="118" fill="#e9d5ff" font-size="11" font-family="monospace" text-anchor="middle">Planetary Earth-Ionosphere Waveguide + 300m Seawater / Rock Penetration</text>
+        `;
+      } else if (band.bounceType === "vlf_duct") {
+        pathsHtml = `
+          <path d="M 70 168 L 165 94 L 260 168 L 355 94 L 450 168 L 540 94" fill="none" stroke="#818cf8" stroke-width="3"/>
+          <text x="300" y="84" fill="#a5b4fc" font-size="11" font-family="monospace" text-anchor="middle">Sharp D-Layer (70 km) Reflection Waveguide Around Earth</text>
+        `;
+      } else if (band.bounceType === "ground_and_sky") {
+        pathsHtml = `
+          <path d="M 70 168 Q 245 148 420 168" fill="none" stroke="#10b981" stroke-width="3.5"/>
+          <path d="M 70 168 L 260 72 L 450 168" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="5 4"/>
+          <text x="245" y="145" fill="#6ee7b7" font-size="11" font-family="monospace" text-anchor="middle">Diffraction Surface Groundwave (1,500 km)</text>
+          <text x="260" y="64" fill="#7dd3fc" font-size="10" font-family="monospace" text-anchor="middle">Nighttime E-Layer Skywave</text>
+        `;
+      } else if (band.bounceType === "mf_day_night") {
+        pathsHtml = `
+          <path d="M 70 168 Q 160 154 250 168" fill="none" stroke="#f59e0b" stroke-width="3"/>
+          <path d="M 70 168 L 195 96" fill="none" stroke="#f43f5e" stroke-width="2" stroke-dasharray="3 3"/>
+          <text x="195" y="90" fill="#fda4af" font-size="10" font-family="monospace" text-anchor="middle">Day D-Layer Absorbs</text>
+          <path d="M 70 168 L 295 54 L 515 168" fill="none" stroke="#38bdf8" stroke-width="3"/>
+          <text x="320" y="46" fill="#7dd3fc" font-size="11" font-family="monospace" text-anchor="middle">Night E/F Layer Skywave Bounce (2,500 km)</text>
+        `;
+      } else if (band.bounceType === "hf_multihop") {
+        pathsHtml = `
+          <path d="M 70 168 L 175 44 L 280 168 L 395 44 L 520 168" fill="none" stroke="#10b981" stroke-width="3.2"/>
+          <path d="M 70 168 L 135 66 L 200 168" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 3"/>
+          <circle cx="175" cy="44" r="4.5" fill="#34d399"/>
+          <circle cx="395" cy="44" r="4.5" fill="#34d399"/>
+          <text x="300" y="34" fill="#6ee7b7" font-size="11" font-family="monospace" text-anchor="middle">Multi-Hop F1/F2 Ionospheric Refraction (Global DX &amp; OTH Radar)</text>
+        `;
+      } else if (band.bounceType === "los_sporadic") {
+        pathsHtml = `
+          <path d="M 70 168 L 235 152" fill="none" stroke="#84cc16" stroke-width="3"/>
+          <path d="M 70 168 L 210 18" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 4"/>
+          <path d="M 70 168 L 250 74 L 430 168" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-dasharray="5 3"/>
+          <text x="175" y="142" fill="#bef264" font-size="10" font-family="monospace">Direct Line-of-Sight</text>
+          <text x="330" y="70" fill="#fcd34d" font-size="10" font-family="monospace">Rare Sporadic-E / Meteor Scatter</text>
+        `;
+      } else if (band.bounceType === "space_los") {
+        pathsHtml = `
+          <path d="M 70 168 L 210 156" fill="none" stroke="#f59e0b" stroke-width="3"/>
+          <path d="M 70 168 L 315 24" fill="none" stroke="#38bdf8" stroke-width="2.8"/>
+          <path d="M 325 24 L 515 168" fill="none" stroke="#10b981" stroke-width="2.5" stroke-dasharray="4 3"/>
+          <rect x="304" y="14" width="24" height="12" rx="3" fill="#38bdf8"/>
+          <line x1="292" y1="20" x2="304" y2="20" stroke="#e2e8f0" stroke-width="2"/>
+          <line x1="328" y1="20" x2="340" y2="20" stroke="#e2e8f0" stroke-width="2"/>
+          <text x="320" y="54" fill="#7dd3fc" font-size="11" font-family="monospace" text-anchor="middle">Pierces Ionosphere Cleanly → LEO/MEO/GEO Satellites &amp; LOS</text>
+        `;
+      } else {
+        pathsHtml = `
+          <path d="M 70 168 L 195 160" fill="none" stroke="#ec4899" stroke-width="3.5"/>
+          <circle cx="220" cy="158" r="14" fill="rgba(244,63,94,0.22)" stroke="#f43f5e" stroke-dasharray="3 2"/>
+          <text x="315" y="128" fill="#f9a8d4" font-size="11" font-family="monospace" text-anchor="middle">Short Pencil-Beam LOS (Blocked by O₂ / H₂O / Walls / Foliage)</text>
+        `;
+      }
+
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#040814"/>
+            <stop offset="55%" stop-color="#0b1936"/>
+            <stop offset="100%" stop-color="#0f2537"/>
+          </linearGradient>
+        </defs>
+        <rect width="600" height="210" fill="url(#skyGrad)"/>
+
+        <!-- Ionospheric Layers -->
+        <path d="M 0 42 Q 300 22 600 42" fill="none" stroke="rgba(56, 189, 248, 0.35)" stroke-width="10"/>
+        <text x="12" y="26" fill="#38bdf8" font-size="9.5" font-family="monospace">F1/F2 Layer (150–400 km)</text>
+
+        <path d="M 0 74 Q 300 56 600 74" fill="none" stroke="rgba(16, 185, 129, 0.28)" stroke-width="7"/>
+        <text x="12" y="64" fill="#34d399" font-size="9.5" font-family="monospace">E Layer (95–130 km)</text>
+
+        <path d="M 0 96 Q 300 80 600 96" fill="none" stroke="rgba(245, 158, 11, 0.25)" stroke-width="5"/>
+        <text x="12" y="92" fill="#fbbf24" font-size="9.5" font-family="monospace">D Layer (60–90 km Day)</text>
+
+        <!-- Curved Earth Horizon -->
+        <path d="M -20 190 Q 300 142 620 190 L 620 215 L -20 215 Z" fill="#0c2e2c" stroke="#10b981" stroke-width="1.5"/>
+
+        <!-- TX & RX Towers -->
+        <line x1="70" y1="168" x2="70" y2="148" stroke="#f8fafc" stroke-width="2.5"/>
+        <circle cx="70" cy="146" r="3.5" fill="#38bdf8"/>
+        <text x="70" y="185" fill="#e2e8f0" font-size="9.5" font-family="monospace" text-anchor="middle">TX</text>
+
+        <line x1="520" y1="168" x2="520" y2="150" stroke="#f8fafc" stroke-width="2.5"/>
+        <circle cx="520" cy="148" r="3.5" fill="#10b981"/>
+        <text x="520" y="185" fill="#e2e8f0" font-size="9.5" font-family="monospace" text-anchor="middle">RX</text>
+
+        ${pathsHtml}
+      `;
+    }
+
+    /***************************************************************************
+     * 8. SIGIDWIKI EXPLORER: FILTER BAR, SIGNAL GRID & MODULATION ENCYCLOPEDIA
+     ***************************************************************************/
+    const FILTER_CATEGORIES = [
+      { id: "ALL", label: "All Signals" },
+      { id: "ELF", label: "ELF" },
+      { id: "ULF", label: "ULF" },
+      { id: "VLF", label: "VLF" },
+      { id: "LF", label: "LF" },
+      { id: "MF", label: "MF" },
+      { id: "HF", label: "HF" },
+      { id: "VHF", label: "VHF" },
+      { id: "UHF", label: "UHF" },
+      { id: "SHF", label: "SHF" },
+      { id: "EHF", label: "EHF" },
+      { id: "THF", label: "THF" },
+      { id: "Military", label: "Military" },
+      { id: "Radar", label: "Radar" },
+      { id: "Aviation", label: "Aviation" },
+      { id: "Marine", label: "Marine" },
+      { id: "Satellite", label: "Satellite" },
+      { id: "Amateur", label: "Amateur" },
+      { id: "Trunked", label: "Trunked" },
+      { id: "Numbers", label: "Numbers Stations" },
+      { id: "Navigation", label: "Navigation" }
+    ];
+
+    function renderCategoryFilterBar() {
+      const bar = document.getElementById("categoryFilterBar");
+      bar.innerHTML = FILTER_CATEGORIES.map(c => `
+        <button class="cat-btn ${activeCategory === c.id ? 'active' : ''}"
+                onclick="setSignalCategory('${c.id}')">
+          ${c.label}
+        </button>
+      `).join("");
+    }
+
+    function setSignalCategory(catId) {
+      activeCategory = catId;
+      renderCategoryFilterBar();
+
+      // If user clicked an ITU band pill in the category bar, sync the top spectrum too
+      const isItu = ITU_BANDS.some(b => b.id === catId);
+      if (isItu && catId !== activeBandId) {
+        cascadeSelectITUBand(catId);
+        return;
+      }
+      renderSignalGrid();
+    }
+
+    function resetSignalFilters() {
+      activeCategory = "ALL";
+      document.getElementById("signalSearchInput").value = "";
+      renderCategoryFilterBar();
+      renderSignalGrid();
+    }
+
+    function jumpToSignalByName(sigName) {
+      const target = SIGID_DATABASE.find(s => s.name.toLowerCase() === sigName.toLowerCase()) ||
+                     SIGID_DATABASE.find(s => s.name.toLowerCase().includes(sigName.toLowerCase()));
+      if (!target) return;
+
+      activeCategory = target.band;
+      document.getElementById("signalSearchInput").value = "";
+      renderCategoryFilterBar();
+      cascadeSelectSignal(target, true);
+      renderSignalGrid();
+      document.getElementById("section-sigid").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function renderSignalGrid() {
+      const query = (document.getElementById("signalSearchInput").value || "").trim().toLowerCase();
+      const grid = document.getElementById("signalGrid");
+
+      const filtered = SIGID_DATABASE.filter(sig => {
+        const matchesCat =
+          activeCategory === "ALL" ||
+          sig.band === activeCategory ||
+          (sig.categories && sig.categories.includes(activeCategory));
+
+        const matchesQuery =
+          !query ||
+          sig.name.toLowerCase().includes(query) ||
+          sig.freq.toLowerCase().includes(query) ||
+          sig.mode.toLowerCase().includes(query) ||
+          sig.modulation.toLowerCase().includes(query) ||
+          sig.desc.toLowerCase().includes(query) ||
+          sig.band.toLowerCase().includes(query);
+
+        return matchesCat && matchesQuery;
+      });
+
+      document.getElementById("showingCountLabel").textContent =
+        `Showing ${filtered.length} of ${SIGID_DATABASE.length} SigIDWiki profiles (Filter: ${activeCategory})`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full p-6 text-center bg-slate-900/60 border border-slate-800 rounded-xl">
+            <p class="text-sm text-slate-300 font-semibold">No signals match your current filter.</p>
+            <button class="cat-btn mt-3" onclick="resetSignalFilters()">Reset Filters to Show All ${SIGID_DATABASE.length} Signals</button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(sig => {
+        const isSel = selectedSignal && selectedSignal.name === sig.name;
+        const safeName = sig.name.replace(/'/g, "\\'");
+        return `
+          <div class="signal-card ${isSel ? 'selected' : ''}" onclick="handleSignalCardClick('${safeName}')">
+            <div>
+              <div class="sig-top">
+                <div class="sig-name">${sig.name}</div>
+                <span class="sig-band-pill">${sig.band}${sig.radarBand ? ' • ' + sig.radarBand : ''}</span>
+              </div>
+              <div class="text-xs text-amber-300 font-mono mt-1 font-semibold">${sig.freq}</div>
+            </div>
+
+            <div class="sig-specs">
+              <div><span>MODULATION</span>${sig.modulation.slice(0, 26)}</div>
+              <div><span>BANDWIDTH</span>${sig.bandwidth}</div>
+            </div>
+
+            <div class="sig-cats">
+              <div class="flex flex-wrap gap-1">
+                ${sig.categories.slice(0, 3).map(c => `<span class="sig-cat-tag">${c}</span>`).join("")}
+              </div>
+              <span class="text-[11px] font-mono text-sky-400">▶ Inspect</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function handleSignalCardClick(sigName) {
+      const sig = SIGID_DATABASE.find(s => s.name === sigName);
+      if (!sig) return;
+      cascadeSelectSignal(sig, true);
+      renderSignalGrid();
+    }
+
+    function renderModulationGuide() {
+      const grid = document.getElementById("modulationGrid");
+      grid.innerHTML = MODULATION_GUIDE.map(m => `
+        <div class="mod-card" onclick="filterByModulation('${m.filterTerm}')">
+          <div class="mod-title">${m.code}</div>
+          <div class="mod-desc">${m.desc}</div>
+        </div>
+      `).join("");
+    }
+
+    function filterByModulation(term) {
+      activeCategory = "ALL";
+      const input = document.getElementById("signalSearchInput");
+      input.value = term;
+      renderCategoryFilterBar();
+      renderSignalGrid();
+      document.getElementById("section-sigid").scrollIntoView({ behavior: "smooth" });
+    }
+
+    /***************************************************************************
+     * 9. LIVE MULTI-ALGORITHM SDR WATERFALL + REAL-TIME FFT SPECTRUM GRAPH
+     ***************************************************************************/
+    function setupWaterfallControls() {
+      document.getElementById("wfZoomSlider").addEventListener("input", e => {
+        wfZoom = parseFloat(e.target.value);
+      });
+      document.getElementById("wfGainSlider").addEventListener("input", e => {
+        wfGain = parseFloat(e.target.value);
+      });
+      document.getElementById("wfPaletteSelect").addEventListener("change", e => {
+        wfPalette = e.target.value;
+      });
+    }
+
+    function colorMap(val, palette) {
+      const v = Math.max(0, Math.min(1, val));
+      if (palette === "phosphor") {
+        return [
+          Math.floor(15 * v * v),
+          Math.floor(255 * Math.pow(v, 0.85)),
+          Math.floor(65 * v * v)
+        ];
+      }
+      if (palette === "artemis") {
+        if (v < 0.25) return [Math.floor(v * 4 * 50), 8, Math.floor(25 + v * 4 * 90)];
+        if (v < 0.55) {
+          const t = (v - 0.25) / 0.3;
+          return [Math.floor(50 + t * 170), Math.floor(8 + t * 40), Math.floor(115 + t * 40)];
+        }
+        if (v < 0.82) {
+          const t = (v - 0.55) / 0.27;
+          return [Math.floor(220 + t * 35), Math.floor(48 + t * 145), Math.floor(155 - t * 120)];
+        }
+        const t = (v - 0.82) / 0.18;
+        return [255, Math.floor(193 + t * 62), Math.floor(35 + t * 220)];
+      }
+      // Default: SDR# Turbo Blue-Cyan-Yellow-Red
+      if (v < 0.22) {
+        const t = v / 0.22;
+        return [2, Math.floor(8 + t * 35), Math.floor(22 + t * 125)];
+      }
+      if (v < 0.5) {
+        const t = (v - 0.22) / 0.28;
+        return [Math.floor(t * 30), Math.floor(43 + t * 185), Math.floor(147 + t * 108)];
+      }
+      if (v < 0.78) {
+        const t = (v - 0.5) / 0.28;
+        return [Math.floor(30 + t * 225), Math.floor(228 + t * 27), Math.floor(255 - t * 210)];
+      }
+      const t = (v - 0.78) / 0.22;
+      return [255, Math.floor(255 - t * 170), Math.floor(45 + t * 180)];
+    }
+
+    function computeSignalSpectrumRow(wfType, width, tick) {
+      const row = new Float32Array(width);
+      const center = width / 2;
+
+      for (let x = 0; x < width; x++) {
+        // Base thermal noise floor
+        let v = 0.08 + Math.random() * 0.07;
+        const normOffset = ((x - center) / (width * 0.5)) / wfZoom;
+        const absOff = Math.abs(normOffset);
+
+        switch (wfType) {
+          case "zevs_elf": {
+            if (absOff < 0.015) v += 0.82 * Math.exp(-Math.pow(normOffset / 0.008, 2));
+            if (Math.abs(normOffset - 0.22) < 0.012) v += 0.55;
+            if (Math.abs(normOffset + 0.22) < 0.012) v += 0.55;
+            break;
+          }
+          case "vlf_msk": {
+            if (absOff < 0.12) {
+              const twin = Math.exp(-Math.pow((absOff - 0.055) / 0.028, 2));
+              v += 0.78 * twin + 0.22 * Math.random();
+            }
+            break;
+          }
+          case "alpha_rsdn": {
+            const phase = Math.floor(tick / 18) % 3;
+            const targetPos = (phase - 1) * 0.18;
+            if (Math.abs(normOffset - targetPos) < 0.016 && (tick % 18) < 13) {
+              v += 0.88 * Math.exp(-Math.pow((normOffset - targetPos) / 0.009, 2));
+            }
+            break;
+          }
+          case "wwvb_pwm": {
+            const secPhase = tick % 40;
+            const carrierGain = secPhase < 12 ? 0.22 : 0.92;
+            if (absOff < 0.02) v += carrierGain * Math.exp(-Math.pow(normOffset / 0.009, 2));
+            break;
+          }
+          case "loran_pulse": {
+            if (tick % 14 < 4) {
+              const sinc = Math.abs(Math.sin(normOffset * 26) / (normOffset * 26 + 0.0001));
+              v += 0.85 * sinc * Math.exp(-absOff * 2.2);
+            }
+            break;
+          }
+          case "ndb_mcw": {
+            if (absOff < 0.012) v += 0.9;
+            const morseOn = ((Math.floor(tick / 6) * 13) % 7) > 2;
+            if (morseOn && Math.abs(absOff - 0.16) < 0.014) v += 0.78;
+            break;
+          }
+          case "navtex_sitor":
+          case "rtty_fsk": {
+            const shift = wfType === "navtex_sitor" ? 0.065 : 0.085;
+            const bit = Math.sin(tick * 0.45 + Math.cos(tick * 0.19)) > 0 ? shift : -shift;
+            v += 0.86 * Math.exp(-Math.pow((normOffset - bit) / 0.014, 2));
+            v += 0.22 * Math.exp(-Math.pow((normOffset + bit) / 0.018, 2));
+            break;
+          }
+          case "am_broadcast": {
+            if (absOff < 0.012) v += 0.95;
+            if (absOff > 0.012 && absOff < 0.28) {
+              const audioEnv = 0.35 + 0.32 * Math.sin(tick * 0.14 + absOff * 18) * Math.cos(tick * 0.07);
+              v += audioEnv * Math.exp(-absOff * 2.5);
+            }
+            break;
+          }
+          case "cw_morse": {
+            const pattern = [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0];
+            const keyDown = pattern[Math.floor(tick / 4) % pattern.length] === 1;
+            if (keyDown && absOff < 0.018) {
+              v += 0.94 * Math.exp(-Math.pow(normOffset / 0.009, 2));
+            }
+            break;
+          }
+          case "ssb_voice": {
+            if (normOffset > 0.01 && normOffset < 0.32) {
+              const syllable = Math.max(0, Math.sin(tick * 0.11) + 0.5 * Math.cos(tick * 0.27));
+              const formant1 = Math.exp(-Math.pow((normOffset - 0.07 - 0.02 * Math.sin(tick * 0.08)) / 0.035, 2));
+              const formant2 = Math.exp(-Math.pow((normOffset - 0.18 - 0.03 * Math.cos(tick * 0.12)) / 0.045, 2));
+              v += syllable * (0.58 * formant1 + 0.45 * formant2);
+            }
+            break;
+          }
+          case "uvb76_buzzer": {
+            if (Math.abs(normOffset + 0.12) < 0.01) v += 0.48;
+            const buzzOn = (tick % 36) < 18;
+            if (buzzOn && normOffset > -0.10 && normOffset < 0.25) {
+              const comb = Math.pow(Math.cos(normOffset * 95), 6);
+              v += 0.78 * comb * Math.exp(-Math.abs(normOffset - 0.06) * 4);
+            }
+            break;
+          }
+          case "ft8_wsjtx": {
+            const utcCycle = tick % 90;
+            if (utcCycle < 76) {
+              const stations = [-0.36, -0.27, -0.19, -0.11, -0.04, 0.03, 0.09, 0.17, 0.24, 0.33, 0.41];
+              for (let i = 0; i < stations.length; i++) {
+                const toneStep = ((Math.floor(tick / 5) + i * 3) % 8) * 0.0028;
+                const pos = stations[i] + toneStep;
+                if (Math.abs(normOffset - pos) < 0.011) {
+                  v += (0.55 + (i % 3) * 0.14) * Math.exp(-Math.pow((normOffset - pos) / 0.006, 2));
+                }
+              }
+            }
+            break;
+          }
+          case "sstv_martin": {
+            if (Math.abs(normOffset + 0.28) < 0.014 && (tick % 16) < 3) {
+              v += 0.95; // 1200 Hz horizontal sync pulse
+            } else {
+              const scanFreq = -0.12 + 0.35 * (0.5 + 0.5 * Math.sin(tick * 0.22 + normOffset * 6));
+              if (Math.abs(normOffset - scanFreq) < 0.04) {
+                v += 0.76 * Math.exp(-Math.pow((normOffset - scanFreq) / 0.025, 2));
+              }
+            }
+            break;
+          }
+          case "ale_2g": {
+            const toneIdx = (Math.floor(tick / 2) * 5) % 8;
+            const tonePos = -0.21 + toneIdx * 0.06;
+            if (Math.abs(normOffset - tonePos) < 0.018) {
+              v += 0.85 * Math.exp(-Math.pow((normOffset - tonePos) / 0.011, 2));
+            }
+            break;
+          }
+          case "stanag_4285":
+          case "tetra_pi4": {
+            if (absOff < 0.26) {
+              v += 0.58 + 0.24 * Math.sin(x * 0.7 + tick * 0.8) * Math.random();
+              if (Math.abs(absOff - 0.26) < 0.015) v *= 0.5;
+            }
+            break;
+          }
+          case "oth_fmcw": {
+            const sweep1 = ((tick * 0.045) % 0.7) - 0.35;
+            const sweep2 = (((tick + 8) * 0.045) % 0.7) - 0.35;
+            if (Math.abs(normOffset - sweep1) < 0.025 || Math.abs(normOffset - sweep2) < 0.025) {
+              v += 0.88;
+            }
+            break;
+          }
+          case "codar_sweep": {
+            const slowSweep = ((tick * 0.012) % 0.8) - 0.4;
+            if (Math.abs(normOffset - slowSweep) < 0.018) {
+              v += 0.92 * Math.exp(-Math.pow((normOffset - slowSweep) / 0.01, 2));
+            }
+            break;
+          }
+          case "wfm_rds": {
+            const dev = 0.14 * Math.sin(tick * 0.12) * Math.cos(tick * 0.05);
+            v += 0.72 * Math.exp(-Math.pow((normOffset - dev) / 0.09, 2));
+            if (Math.abs(absOff - 0.22) < 0.008) v += 0.84; // 19 kHz stereo pilot
+            if (Math.abs(absOff - 0.38) < 0.014) v += 0.45 * Math.random(); // 57 kHz RDS
+            break;
+          }
+          case "noaa_apt": {
+            if (absOff < 0.28) {
+              const syncTick = (tick % 20) < 4;
+              const bars = Math.abs(Math.cos(normOffset * 32));
+              v += (syncTick ? 0.88 : 0.52) * bars;
+            }
+            break;
+          }
+          case "pocsag_pager": {
+            const modePhase = tick % 60;
+            if (modePhase < 20) {
+              if (Math.abs(absOff - 0.14) < 0.016) v += 0.88;
+            } else if (modePhase < 52) {
+              const sym = Math.random() > 0.5 ? 0.14 : -0.14;
+              if (Math.abs(normOffset - sym) < 0.02) v += 0.86;
+            }
+            break;
+          }
+          case "p25_c4fm": {
+            const cols = [-0.18, -0.06, 0.06, 0.18];
+            const activeCol = cols[(Math.floor(tick / 2) + Math.floor(Math.random() * 4)) % 4];
+            for (const c of cols) {
+              const amp = c === activeCol ? 0.82 : 0.28;
+              v += amp * Math.exp(-Math.pow((normOffset - c) / 0.018, 2));
+            }
+            break;
+          }
+          case "lora_css": {
+            const chirpPos = -0.32 + ((tick * 0.022) % 0.64);
+            if (Math.abs(normOffset - chirpPos) < 0.018) {
+              v += 0.94 * Math.exp(-Math.pow((normOffset - chirpPos) / 0.009, 2));
+            }
+            break;
+          }
+          case "adsb_ppm": {
+            if (tick % 11 === 0 || tick % 17 === 0) {
+              if (absOff < 0.38) v += 0.75 * Math.exp(-absOff * 2.5) * (0.6 + 0.4 * Math.random());
+            }
+            break;
+          }
+          case "link16_fhss":
+          case "bt_ble_fhss": {
+            const hopCenter = Math.sin(tick * 1.7) * 0.36;
+            if (Math.abs(normOffset - hopCenter) < 0.035) {
+              v += 0.88 * Math.exp(-Math.pow((normOffset - hopCenter) / 0.02, 2));
+            }
+            break;
+          }
+          case "lte_5g_ofdma":
+          default: {
+            if (absOff < 0.40 && absOff > 0.008) {
+              const prb = Math.floor((normOffset + 0.4) * 16);
+              const activePrb = ((prb * 7 + Math.floor(tick / 6)) % 5) !== 0;
+              v += activePrb ? (0.58 + 0.25 * Math.random()) : 0.18;
+            }
+            break;
+          }
+        }
+
+        row[x] = Math.min(1.0, v * wfGain);
+      }
+      return row;
+    }
+
+    function startWaterfallLoop() {
+      const canvas = document.getElementById("waterfallCanvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const W = canvas.width;
+      const H = canvas.height;
+      const SPEC_H = 68; // Top real-time FFT spectrum trace height
+      const WF_Y = SPEC_H + 2;
+      const WF_H = H - WF_Y;
+
+      ctx.fillStyle = "#02040a";
+      ctx.fillRect(0, 0, W, H);
+
+      function renderFrame() {
+        wfTick++;
+        const wfType = selectedSignal ? selectedSignal.wfType : "ft8_wsjtx";
+        const row = computeSignalSpectrumRow(wfType, W, wfTick);
+
+        // 1. Shift existing waterfall down by 1 pixel
+        const existingWf = ctx.getImageData(0, WF_Y, W, WF_H - 1);
+        ctx.putImageData(existingWf, 0, WF_Y + 1);
+
+        // 2. Draw new top waterfall line
+        const newLine = ctx.createImageData(W, 1);
+        for (let x = 0; x < W; x++) {
+          const [r, g, b] = colorMap(row[x], wfPalette);
+          const idx = x * 4;
+          newLine.data[idx] = r;
+          newLine.data[idx + 1] = g;
+          newLine.data[idx + 2] = b;
+          newLine.data[idx + 3] = 255;
+        }
+        ctx.putImageData(newLine, 0, WF_Y);
+
+        // 3. Draw top live FFT spectrum analyzer trace
+        ctx.fillStyle = "#040814";
+        ctx.fillRect(0, 0, W, SPEC_H);
+
+        // Grid lines
+        ctx.strokeStyle = "rgba(56, 189, 248, 0.14)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(W / 2, 0);
+        ctx.lineTo(W / 2, SPEC_H);
+        ctx.moveTo(0, SPEC_H * 0.5);
+        ctx.lineTo(W, SPEC_H * 0.5);
+        ctx.stroke();
+
+        // FFT curve
+        ctx.beginPath();
+        ctx.moveTo(0, SPEC_H);
+        for (let x = 0; x < W; x++) {
+          const y = SPEC_H - row[x] * (SPEC_H - 8);
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(W, SPEC_H);
+        ctx.closePath();
+
+        const grad = ctx.createLinearGradient(0, 0, 0, SPEC_H);
+        grad.addColorStop(0, "rgba(56, 189, 248, 0.55)");
+        grad.addColorStop(1, "rgba(56, 189, 248, 0.04)");
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        for (let x = 0; x < W; x++) {
+          const y = SPEC_H - row[x] * (SPEC_H - 8);
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Divider line
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(0, SPEC_H, W, 2);
+
+        requestAnimationFrame(renderFrame);
+      }
+
+      requestAnimationFrame(renderFrame);
+    }
+
+    /***************************************************************************
+     * 10. WEB AUDIO API REAL-TIME DEMODULATED SIGNAL SYNTHESIZER
+     ***************************************************************************/
+    function toggleSignalAudio() {
+      if (isAudioPlaying) {
+        stopSignalAudio();
+      } else {
+        startSignalAudio();
+      }
+    }
+
+    function startSignalAudio() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+        stopSignalAudio();
+
+        isAudioPlaying = true;
+        const btn = document.getElementById("audioToggleBtn");
+        btn.classList.add("playing");
+        document.getElementById("audioBtnText").textContent = "Stop Audio";
+
+        const wfType = selectedSignal ? selectedSignal.wfType : "ft8_wsjtx";
+        const masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.16;
+        masterGain.connect(audioCtx.destination);
+
+        const osc = audioCtx.createOscillator();
+        osc.type = (wfType === "oth_fmcw" || wfType === "uvb76_buzzer") ? "sawtooth" : "sine";
+        osc.frequency.value = 800;
+        osc.connect(masterGain);
+        osc.start();
+        activeAudioNodes.push(osc, masterGain);
+
+        let step = 0;
+        audioInterval = setInterval(() => {
+          if (!isAudioPlaying || !audioCtx) return;
+          step++;
+          const now = audioCtx.currentTime;
+
+          switch (wfType) {
+            case "ft8_wsjtx": {
+              const tones = [520, 580, 640, 700, 760, 820, 880, 940];
+              osc.frequency.setValueAtTime(tones[(step * 3) % tones.length], now);
+              break;
+            }
+            case "rtty_fsk":
+            case "navtex_sitor": {
+              const markSpace = (step % 2 === 0 || step % 5 === 0) ? 1275 : 1445;
+              osc.frequency.setValueAtTime(markSpace, now);
+              break;
+            }
+            case "cw_morse":
+            case "ndb_mcw": {
+              const morse = [1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0];
+              const on = morse[step % morse.length] === 1;
+              masterGain.gain.setTargetAtTime(on ? 0.18 : 0.005, now, 0.015);
+              osc.frequency.setValueAtTime(750, now);
+              break;
+            }
+            case "uvb76_buzzer": {
+              const buzzOn = (step % 12) < 6;
+              masterGain.gain.setTargetAtTime(buzzOn ? 0.18 : 0.01, now, 0.02);
+              osc.frequency.setValueAtTime(130, now);
+              break;
+            }
+            case "oth_fmcw":
+            case "codar_sweep":
+            case "lora_css": {
+              osc.frequency.setValueAtTime(300, now);
+              osc.frequency.linearRampToValueAtTime(1600, now + 0.14);
+              break;
+            }
+            case "noaa_apt": {
+              osc.frequency.setValueAtTime(2400, now);
+              masterGain.gain.setTargetAtTime((step % 4 < 2) ? 0.18 : 0.06, now, 0.02);
+              break;
+            }
+            default: {
+              osc.frequency.setValueAtTime(600 + ((step * 137) % 700), now);
+              break;
+            }
+          }
+        }, 140);
+      } catch (err) {
+        console.error("Audio synth error:", err);
+      }
+    }
+
+    function stopSignalAudio() {
+      isAudioPlaying = false;
+      if (audioInterval) {
+        clearInterval(audioInterval);
+        audioInterval = null;
+      }
+      activeAudioNodes.forEach(node => {
+        try {
+          if (node.stop) node.stop();
+          if (node.disconnect) node.disconnect();
+        } catch (_) {}
+      });
+      activeAudioNodes = [];
+      const btn = document.getElementById("audioToggleBtn");
+      if (btn) btn.classList.remove("playing");
+      const txt = document.getElementById("audioBtnText");
+      if (txt) txt.textContent = "Synthesize Audio";
+    }
+
+    /***************************************************************************
+     * 11. ANTENNA SIZE, WAVELENGTH, SKIN DEPTH & PHYSICAL SCALE SVG CALCULATOR
+     ***************************************************************************/
+    function formatLength(meters) {
+      if (meters >= 1000) {
+        const km = meters / 1000;
+        const mi = km * 0.621371;
+        return `${km.toFixed(2)} km (${mi.toFixed(2)} mi)`;
+      }
+      if (meters >= 1) {
+        const ft = meters * 3.28084;
+        return `${meters.toFixed(2)} m (${ft.toFixed(1)} ft)`;
+      }
+      if (meters >= 0.01) {
+        const cm = meters * 100;
+        const inches = meters * 39.3701;
+        return `${cm.toFixed(2)} cm (${inches.toFixed(2)} in)`;
+      }
+      const mm = meters * 1000;
+      return `${mm.toFixed(2)} mm (${(mm / 25.4).toFixed(3)} in)`;
+    }
+
+    function formatFreqShort(freqHz) {
+      if (freqHz >= 1e9) return `${(freqHz / 1e9).toFixed(3).replace(/\.?0+$/, "")} GHz`;
+      if (freqHz >= 1e6) return `${(freqHz / 1e6).toFixed(3).replace(/\.?0+$/, "")} MHz`;
+      if (freqHz >= 1e3) return `${(freqHz / 1e3).toFixed(2).replace(/\.?0+$/, "")} kHz`;
+      return `${freqHz} Hz`;
+    }
+
+    function computeAntennaDimensions(freqHz) {
+      const c = 299792458; // Speed of light (m/s)
+      const lambda = c / Math.max(1e-6, freqHz);
+      // Practical end-effect velocity factor ~0.95 for resonant wire/rod antennas
+      const halfDipole = (lambda / 2) * 0.95;
+      const quarterWhip = (lambda / 4) * 0.95;
+      const fiveEighths = lambda * 0.625 * 0.95;
+      // Seawater skin depth (δ ≈ 250 / sqrt(f))
+      const seawaterDepth = 250 / Math.sqrt(Math.max(1e-3, freqHz));
+      // Copper RF skin depth in micrometers (δ ≈ 66000 / sqrt(f))
+      const copperSkinUm = 66000 / Math.sqrt(Math.max(1, freqHz));
+
+      return {
+        lambda,
+        halfDipole,
+        quarterWhip,
+        fiveEighths,
+        seawaterDepth,
+        copperSkinUm,
+        lambdaStr: formatLength(lambda),
+        halfDipoleStr: formatLength(halfDipole),
+        quarterWhipStr: formatLength(quarterWhip),
+        fiveEighthsStr: formatLength(fiveEighths),
+        seawaterStr: formatLength(seawaterDepth),
+        copperSkinStr: copperSkinUm >= 1000 ? `${(copperSkinUm / 1000).toFixed(2)} mm` : `${copperSkinUm.toFixed(2)} µm`
+      };
+    }
+
+    function setCalculatorFrequencyHz(freqHz, sourceText) {
+      const input = document.getElementById("calcFreqInput");
+      const select = document.getElementById("calcUnitSelect");
+
+      if (freqHz >= 1e9) {
+        select.value = "1000000000";
+        input.value = +(freqHz / 1e9).toFixed(5);
+      } else if (freqHz >= 1e6) {
+        select.value = "1000000";
+        input.value = +(freqHz / 1e6).toFixed(5);
+      } else if (freqHz >= 1e3) {
+        select.value = "1000";
+        input.value = +(freqHz / 1e3).toFixed(4);
+      } else {
+        select.value = "1";
+        input.value = +freqHz.toFixed(2);
+      }
+
+      if (sourceText) {
+        document.getElementById("calcSyncSourceLabel").textContent = sourceText;
+      }
+      renderCalculatorOutputs(freqHz);
+    }
+
+    function setupCalculatorListeners() {
+      const updateFromUI = () => {
+        const val = parseFloat(document.getElementById("calcFreqInput").value) || 1;
+        const unit = parseFloat(document.getElementById("calcUnitSelect").value) || 1;
+        const freqHz = Math.max(0.1, val * unit);
+        document.getElementById("calcSyncSourceLabel").textContent = `Custom Manual Frequency (${formatFreqShort(freqHz)})`;
+        renderCalculatorOutputs(freqHz);
+      };
+
+      document.getElementById("calcFreqInput").addEventListener("input", updateFromUI);
+      document.getElementById("calcUnitSelect").addEventListener("change", updateFromUI);
+    }
+
+    function syncBandFromCalculator() {
+      const val = parseFloat(document.getElementById("calcFreqInput").value) || 1;
+      const unit = parseFloat(document.getElementById("calcUnitSelect").value) || 1;
+      const freqHz = val * unit;
+
+      let targetBand = "HF";
+      if (freqHz < 300) targetBand = "ELF";
+      else if (freqHz < 3000) targetBand = "ULF";
+      else if (freqHz < 30000) targetBand = "VLF";
+      else if (freqHz < 300000) targetBand = "LF";
+      else if (freqHz < 3e6) targetBand = "MF";
+      else if (freqHz < 30e6) targetBand = "HF";
+      else if (freqHz < 300e6) targetBand = "VHF";
+      else if (freqHz < 3e9) targetBand = "UHF";
+      else if (freqHz < 30e9) targetBand = "SHF";
+      else if (freqHz < 300e9) targetBand = "EHF";
+      else targetBand = "THF";
+
+      cascadeSelectITUBand(targetBand);
+      setCalculatorFrequencyHz(freqHz, `Jumped Spectrum to ${formatFreqShort(freqHz)} (${targetBand})`);
+      document.getElementById("section-spectrum").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function renderCalculatorOutputs(freqHz) {
+      const dims = computeAntennaDimensions(freqHz);
+      document.getElementById("calcResultsGrid").innerHTML = `
+        <div class="calc-box">
+          <div class="c-lbl">Full Wavelength (λ in Free Space)</div>
+          <div class="c-val">${dims.lambdaStr}</div>
+        </div>
+        <div class="calc-box">
+          <div class="c-lbl">Half-Wave Dipole (λ/2 × 0.95 VF)</div>
+          <div class="c-val" style="color: var(--accent);">${dims.halfDipoleStr}</div>
+        </div>
+        <div class="calc-box">
+          <div class="c-lbl">Quarter-Wave Whip (λ/4 × 0.95 VF)</div>
+          <div class="c-val" style="color: var(--amber);">${dims.quarterWhipStr}</div>
+        </div>
+        <div class="calc-box">
+          <div class="c-lbl">5/8-Wave Vertical Gain Antenna</div>
+          <div class="c-val">${dims.fiveEighthsStr}</div>
+        </div>
+        <div class="calc-box">
+          <div class="c-lbl">Seawater 1/e Skin Depth (δ)</div>
+          <div class="c-val" style="color: var(--purple);">${dims.seawaterStr}</div>
+        </div>
+        <div class="calc-box">
+          <div class="c-lbl">Copper Conductor Skin Depth</div>
+          <div class="c-val">${dims.copperSkinStr}</div>
+        </div>
+      `;
+
+      renderAntennaScaleSvg(dims, freqHz);
+    }
+
+    function renderAntennaScaleSvg(dims, freqHz) {
+      const svg = document.getElementById("antennaScaleSvg");
+      const compLabel = document.getElementById("antennaScaleComparisonText");
+
+      let refName = "Adult Human (1.8 m)";
+      let refMeters = 1.8;
+
+      if (dims.halfDipole > 500) {
+        refName = "Eiffel Tower (330 m)";
+        refMeters = 330;
+      } else if (dims.halfDipole > 15) {
+        refName = "2-Story House (8.0 m)";
+        refMeters = 8.0;
+      } else if (dims.halfDipole > 0.35) {
+        refName = "Adult Human (1.8 m)";
+        refMeters = 1.8;
+      } else if (dims.halfDipole > 0.015) {
+        refName = "Smartphone (15 cm)";
+        refMeters = 0.15;
+      } else {
+        refName = "US Dime Coin / IC Chip (18 mm)";
+        refMeters = 0.018;
+      }
+
+      compLabel.textContent = `Benchmark: ${refName}`;
+
+      const maxVal = Math.max(dims.halfDipole, refMeters);
+      const dipoleBarW = Math.max(18, Math.min(390, (dims.halfDipole / maxVal) * 390));
+      const whipBarW = Math.max(12, Math.min(390, (dims.quarterWhip / maxVal) * 390));
+      const refBarW = Math.max(18, Math.min(390, (refMeters / maxVal) * 390));
+
+      svg.innerHTML = `
+        <rect width="580" height="145" fill="#050914" rx="8"/>
+
+        <!-- Row 1: Half-Wave Dipole -->
+        <text x="14" y="34" fill="#38bdf8" font-size="11" font-family="monospace" font-weight="bold">λ/2 Dipole</text>
+        <rect x="125" y="21" width="${dipoleBarW}" height="16" rx="4" fill="#0284c7" stroke="#38bdf8"/>
+        <text x="${133 + dipoleBarW}" y="33" fill="#f8fafc" font-size="11" font-family="monospace">${dims.halfDipoleStr}</text>
+
+        <!-- Row 2: Quarter-Wave Whip -->
+        <text x="14" y="75" fill="#f59e0b" font-size="11" font-family="monospace" font-weight="bold">λ/4 Whip</text>
+        <rect x="125" y="62" width="${whipBarW}" height="16" rx="4" fill="#b45309" stroke="#f59e0b"/>
+        <text x="${133 + whipBarW}" y="74" fill="#f8fafc" font-size="11" font-family="monospace">${dims.quarterWhipStr}</text>
+
+        <!-- Row 3: Real-World Reference Benchmark -->
+        <text x="14" y="116" fill="#10b981" font-size="11" font-family="monospace" font-weight="bold">Reference</text>
+        <rect x="125" y="103" width="${refBarW}" height="16" rx="4" fill="#065f46" stroke="#10b981"/>
+        <text x="${133 + refBarW}" y="115" fill="#6ee7b7" font-size="11" font-family="monospace">${refName}</text>
+      `;
+    }
+
+    window.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>
